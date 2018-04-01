@@ -69,14 +69,22 @@ public class HttpClient {
 		}
 	}
 
-	private String execute(CloseableHttpClient httpclient, HttpPost request) throws Exception {
-		for (currentAttempt = 0; currentAttempt < maxRetriesInCaseOfErrors; currentAttempt++) {
+	private String execute(CloseableHttpClient httpclient, HttpPost request, boolean expectResponse) throws Exception {
+		for (currentAttempt = 0; currentAttempt <= maxRetriesInCaseOfErrors; currentAttempt++) {
             CloseableHttpResponse response = null;
             try {
             	response = httpclient.execute(request);
             	statusCode = response.getStatusLine().getStatusCode();
             	statusMessage = response.getStatusLine().getReasonPhrase();
-                return EntityUtils.toString(response.getEntity());
+            	if (expectResponse) {
+                	String responseContent = EntityUtils.toString(response.getEntity());
+                	if (Util.isEmpty(responseContent)) {
+                		throw new Exception("Empty response received.");
+                	}
+                    return responseContent;
+            	} else {
+            		return "";
+            	}
             } catch (NoRouteToHostException e) {
             	LOG.error("POST request: " + request.getURI() + " failed.", e);
             	throw new Exception("POST request: " + request.getURI() + " failed.", e);
@@ -84,7 +92,7 @@ public class HttpClient {
             	LOG.error("POST request: " + request.getURI() + " failed.", e);
             	throw new Exception("POST request: " + request.getURI() + " failed.", e);
             } catch (SocketException e) {
-            	if (currentAttempt < maxRetriesInCaseOfErrors) {
+            	if (currentAttempt <= maxRetriesInCaseOfErrors) {
                 	// this can happen, we try it again
                 	LOG.warn("POST request: " + request.getURI() + " failed (#" + currentAttempt + " attempt). Waiting " + waitMillisAfterError + "ms and retry request.", e);
                 	Thread.sleep(waitMillisAfterError);
@@ -98,25 +106,32 @@ public class HttpClient {
             	}
             }
 		}
+    	httpclient.close();
 		return null;
 	}
 
-	public String post(String urlStr, String user, String password, JsonNode node) throws Exception {
+	public String post(String urlStr, String user, String password, JsonNode node, boolean expectResponse) throws Exception {
         CloseableHttpClient httpclient = createClient(urlStr, user, password); 
         HttpPost request = new HttpPost(urlStr);
         request.getConfig();
-        request.setEntity(buildEntity(node));
-        request.addHeader("Content-Type", "application/json;charset=UTF-8");
-        request.addHeader("Accept", "application/json");
-        return execute(httpclient, request);
+        if (node != null) {
+            request.setEntity(buildEntity(node));
+            request.addHeader("Accept", "application/json");
+            request.addHeader("Content-Type", "application/json;charset=UTF-8");
+        }
+        return execute(httpclient, request, expectResponse);
 	}
 
-	public String post(String urlStr, String user, String password, String content, String encoding) throws Exception {
+	public String post(String urlStr, String user, String password, String content, String encoding, boolean expectResponse) throws Exception {
         CloseableHttpClient httpclient = createClient(urlStr, user, password);
         HttpPost request = new HttpPost(urlStr);
         request.getConfig();
-        request.setEntity(buildEntity(content, encoding));
-        return execute(httpclient, request);
+        if (content != null) {
+            request.setEntity(buildEntity(content, encoding));
+            request.addHeader("Content-Type", "application/json;charset=UTF-8");
+            request.addHeader("Accept", "application/json");
+        }
+        return execute(httpclient, request, expectResponse);
 	}
 	
 	private CloseableHttpClient createClient(String urlStr, String user, String password) throws Exception {

@@ -1,0 +1,54 @@
+<%@ jet 
+	imports="
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+		org.talend.core.model.process.INode 
+		org.talend.core.model.process.ElementParameterParser 
+		org.talend.core.model.process.IConnectionCategory
+		org.talend.core.model.process.IConnection
+		org.talend.core.model.utils.NodeUtil
+		java.util.List
+		java.util.Map
+	"
+%>
+<%
+	 CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+    INode node = (INode) codeGenArgument.getArgument();
+    String cid = node.getUniqueName();
+	 IConnection conn = null;
+	 List<? extends IConnection> outConns = NodeUtil.getIncomingConnections(node, IConnectionCategory.DATA);
+	 if (outConns.size() > 0) {
+		  conn = outConns.get(0);
+	 }
+	 List<Map<String, String>> variables = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__VARIABLES__");
+	 boolean valuesFromFlow = "true".equals(ElementParameterParser.getValue(node, "__TAKE_VALUE_FROM_FLOW__"));
+%>
+	try {
+<%	if (conn != null && valuesFromFlow) { %>
+		<%=cid%>.failure(
+			<%=conn.getName()%>.errorMessage,
+			<%=conn.getName()%>.errorDetails,
+			<%=conn.getName()%>.retries,
+			<%=conn.getName()%>.retryTimeout
+		);
+<% } else { %> 
+		<%=cid%>.failure(
+<%		for (int i = 0; i < variables.size(); i++) {
+			Map<String, String> entry = variables.get(i);
+			String value = entry.get("VALUE");
+			if (value == null || value.trim().isEmpty()) {
+				value = "null";
+			} %>
+			<%=(value + (i < variables.size() - 1 ? "," : ""))%>
+<%		} %>
+		);
+<%	} %>
+		Integer count_<%=cid%> = (Integer) globalMap.get("<%=cid%>_NB_LINE");
+		if (count_<%=cid%> == null) {
+			count_<%=cid%> = 0;
+		}
+		count_<%=cid%> = count_<%=cid%> + 1;
+		globalMap.put("<%=cid%>_NB_LINE", count_<%=cid%>);	
+	} catch (Exception ex) {
+		globalMap.put("<%=cid%>_ERROR_MESSAGE", ex.getMessage());
+		throw ex;
+	}

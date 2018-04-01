@@ -1,0 +1,121 @@
+<%@ jet 
+	imports="
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+		org.talend.core.model.process.INode 
+		org.talend.core.model.process.ElementParameterParser 
+		org.talend.core.model.metadata.IMetadataTable 
+		org.talend.core.model.metadata.IMetadataColumn 
+		org.talend.core.model.process.IConnectionCategory
+		org.talend.core.model.process.IConnection
+		org.talend.core.model.utils.NodeUtil
+		org.talend.core.model.metadata.types.JavaTypesManager
+		java.util.List
+		java.util.ArrayList
+	"
+%>
+<%
+	 CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+    INode node = (INode) codeGenArgument.getArgument();
+    String cid = node.getUniqueName();
+    String server = ElementParameterParser.getValue(node, "__CAMUNDA_SERVICE__");
+    String engine = ElementParameterParser.getValue(node, "__CAMUNDA_ENGINE__");
+    boolean needAuthentication = "true".equals(ElementParameterParser.getValue(node, "__NEED_AUTHENTICATION__"));
+    String user = ElementParameterParser.getValue(node, "__CAMUNDA_USER__");
+    if (user == null || user.trim().isEmpty()) {
+        user = "null";
+    }
+    String password = ElementParameterParser.getValue(node, "__CAMUNDA_PASSWORD__");
+    if (password == null || password.trim().isEmpty()) {
+        password = "null";
+    }	
+    String topicName = ElementParameterParser.getValue(node, "__TOPIC_NAME__");
+    String maxTasks = ElementParameterParser.getValue(node, "__MAX_TASKS__");
+    if (maxTasks == null || maxTasks.trim().isEmpty()) {
+    	  maxTasks = "null";
+    }
+    String workerId = ElementParameterParser.getValue(node, "__WORKER_ID__");
+    String lockDuration = ElementParameterParser.getValue(node, "__LOCK_DURATION__");
+    String stopTime = ElementParameterParser.getValue(node, "__STOP_TIME__");
+    String secondsBetweenFetches = ElementParameterParser.getValue(node, "__SECONDS_BETWEEN_FETCH__");
+    String maxRetries = ElementParameterParser.getValue(node, "__MAX_RETRIES_AFTER_ERROR__");
+    String timeout = ElementParameterParser.getValue(node, "__TIMEOUT__");
+	 IConnection conn = null;
+	 List<? extends IConnection> outConns = NodeUtil.getOutgoingConnections(node, IConnectionCategory.DATA);
+	 if (outConns.size() > 0) {
+		  conn = outConns.get(0);
+	 }
+	 List<IMetadataColumn> listColumns = new ArrayList<IMetadataColumn>(); // dummy
+	 List<IMetadataTable> metadatas = node.getMetadataList();
+	 if (metadatas != null && metadatas.size() > 0) {
+    	  IMetadataTable metadata = metadatas.get(0);
+    	  if (metadata != null) {
+    		   listColumns = metadata.getListColumns();
+		  }
+	 }
+%>
+	de.jlo.talendcomp.camunda.externaltask.FetchAndLock <%=cid%> = new de.jlo.talendcomp.camunda.externaltask.FetchAndLock();
+	<%=cid%>.setCamundaServiceURL(<%=server%>);
+	<%=cid%>.setCamundaEngine(<%=engine%>);
+	<%=cid%>.setNeedAuthorization(<%=needAuthentication%>);
+<%	if (needAuthentication) { %>
+	<%=cid%>.setCamundaUser(<%=user%>);
+	<%=cid%>.setCamundaPassword(<%=password%>);
+<%	} %>
+	<%=cid%>.setTopicName(<%=topicName%>);
+	<%=cid%>.setWorkerId(<%=workerId%>);
+	<%=cid%>.setNumberTaskToFetch(<%=maxTasks%>);
+	<%=cid%>.setLockDuration(<%=lockDuration%>);
+<%	if (stopTime != null && stopTime.trim().isEmpty() == false) { %>
+	<%=cid%>.setStopTime(<%=stopTime%>);
+<%	} %>
+	<%=cid%>.setSecondsBetweenFetches(<%=secondsBetweenFetches%>);
+<%	if (maxRetries != null && maxRetries.trim().isEmpty() == false) { %>
+	<%=cid%>.setMaxRetriesInCaseOfErrors(<%=maxRetries%>);
+<%	} %>
+<%	if (timeout != null && timeout.trim().isEmpty() == false) { %>
+	<%=cid%>.setTimeout(<%=timeout%>);
+<%	} %>
+<%	for (IMetadataColumn col : listColumns) { %>
+	<%=cid%>.addVariable("<%=col.getLabel()%>");
+<% } %>
+	globalMap.put("<%=cid%>", <%=cid%>);
+	while (true) {
+		try {
+			// next calls repeatly fetchAnLock and iterates through the fetched tasks
+			if (<%=cid%>.next() == false) {
+				break;
+			}
+			globalMap.put("<%=cid%>_CURRENT_PROCESS_ID", <%=cid%>.getCurrentTaskProcessInstanceId());
+			globalMap.put("<%=cid%>_CURRENT_TASK_ID", <%=cid%>.getCurrentTaskId());
+<%		for (int i = 0; i < listColumns.size(); i++) {
+			IMetadataColumn mc = listColumns.get(i);
+			String fieldLabel = "\"" + mc.getLabel()  + "\"";
+			String pattern = mc.getPattern();
+			if (pattern == null || pattern.trim().isEmpty()) {
+				pattern = "null";
+			}
+			String javaClassName = mc.getTalendType().substring(3);
+			String javaPackageClassName = JavaTypesManager.getTypeToGenerate(mc.getTalendType(), true);
+			boolean isDateValue = javaClassName.contains("Date"); %>
+			{
+<%			if (isDateValue) { %>
+				<%=javaPackageClassName%> var = <%=cid%>.getCurrentTaskVariableValueAsDate(<%=fieldLabel%>, <%=pattern%>);
+<%			} else { %>
+				<%=javaPackageClassName%> var = <%=cid%>.getCurrentTaskVariableValueAs<%=javaClassName%>(<%=fieldLabel%>);
+<%			} %>
+				globalMap.put("<%=cid%>.<%=mc.getLabel()%>", var);
+<% 		if (conn != null) { %>
+				<%=conn.getName()%>.<%=mc.getLabel()%> = var;
+<%			} %>
+			}
+<%		} %> 
+			Integer count_<%=cid%> = (Integer) globalMap.get("<%=cid%>_NB_LINE");
+			if (count_<%=cid%> == null) {
+				count_<%=cid%> = 0;
+			}
+			count_<%=cid%> = count_<%=cid%> + 1;
+			globalMap.put("<%=cid%>_NB_LINE", count_<%=cid%>);	
+		} catch (Exception ex) {
+			globalMap.put("<%=cid%>_ERROR_MESSAGE", ex.getMessage());
+			throw ex;
+		}

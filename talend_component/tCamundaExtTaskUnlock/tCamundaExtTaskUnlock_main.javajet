@@ -1,0 +1,23 @@
+<%@ jet 
+	imports="
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+		org.talend.core.model.process.INode 
+	"
+%>
+<%
+	 CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+    INode node = (INode) codeGenArgument.getArgument();
+    String cid = node.getUniqueName();
+%>
+	try {
+		<%=cid%>.unlock();
+		Integer count_<%=cid%> = (Integer) globalMap.get("<%=cid%>_NB_LINE");
+		if (count_<%=cid%> == null) {
+			count_<%=cid%> = 0;
+		}
+		count_<%=cid%> = count_<%=cid%> + 1;
+		globalMap.put("<%=cid%>_NB_LINE", count_<%=cid%>);	
+	} catch (Exception ex) {
+		globalMap.put("<%=cid%>_ERROR_MESSAGE", ex.getMessage());
+		throw ex;
+	}

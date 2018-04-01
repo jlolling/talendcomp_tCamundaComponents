@@ -6,16 +6,16 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class CamundaClientTest {
-	
+
 	@Before
 	public void init() {
 		BasicConfigurator.configure();
 	}
-
+	
 	@Test
 	public void testFetchAndLock() throws Exception {
-		CamundaClient cc = new CamundaClient();
-		cc.setCamundaServiceEndpointURL("http://camundatest02.gvl.local:10080");
+		FetchAndLock cc = new FetchAndLock();
+		cc.setCamundaServiceURL("http://camundatest02.gvl.local:10080");
 		cc.setCamundaUser("talend_test");
 		cc.setCamundaPassword("talend_test");
 		cc.setWorkerId("camundaClientTest");
@@ -26,4 +26,5 @@ public class CamundaClientTest {
 		System.out.println("Fetched task: " + fetchedTask);
 		Assert.assertTrue(true);
 	}
+
 }
