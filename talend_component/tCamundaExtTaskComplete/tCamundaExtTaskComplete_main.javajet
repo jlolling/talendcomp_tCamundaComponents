@@ -32,7 +32,13 @@
 	 }
 	 List<Map<String, String>> variables = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__VARIABLES__");
 	 boolean valuesFromFlow = "true".equals(ElementParameterParser.getValue(node, "__TAKE_VALUE_FROM_FLOW__"));
+    String fetchAndLock = ElementParameterParser.getValue(node, "__FETCH_AND_LOCK_COMPONENT__");
 %>
+	de.jlo.talendcomp.camunda.externaltask.Response <%=cid%> = (de.jlo.talendcomp.camunda.externaltask.Response) globalMap.get("<%=cid%>");
+	if (<%=cid%> == null) {
+		<%=cid%> = new de.jlo.talendcomp.camunda.externaltask.Response((de.jlo.talendcomp.camunda.externaltask.FetchAndLock) globalMap.get("<%=fetchAndLock%>"));
+		globalMap.put("<%=cid%>", <%=cid%>);
+	}
 	try {
 <%	for (int i = 0; i < listColumns.size(); i++) {
 		IMetadataColumn mc = listColumns.get(i);

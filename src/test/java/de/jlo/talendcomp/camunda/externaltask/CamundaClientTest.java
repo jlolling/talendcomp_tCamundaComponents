@@ -22,8 +22,12 @@ public class CamundaClientTest {
 		cc.setNumberTaskToFetch(1);
 		cc.setTopicName("calculateConflict");
 		cc.addVariable("calculateConflict");
-		int fetchedTask = cc.fetchAndLock();
-		System.out.println("Fetched task: " + fetchedTask);
+		cc.setLockDuration(10);
+		cc.setStopTime(5);
+		while (cc.next()) {
+			System.out.println(cc.getCurrentTaskId());
+			System.out.println(cc.getCurrentTaskVariableValueAsObject("calculateConflict"));
+		}
 		Assert.assertTrue(true);
 	}
 

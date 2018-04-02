@@ -45,23 +45,32 @@ public class FetchAndLock extends CamundaClient {
 					.put("topicName", topicName)
 					.put("lockDuration", lockDuration)
 					.set("variables", getVariableNames());
-		HttpClient client = createHttpClient();
-		String responseStr = client.post(getExternalTaskEndpointURL() + "/fetchAndLock", camundaUser, camundaPassword, requestPayload, true);
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Response: " + responseStr);
-		}
-		if (client.getStatusCode() != 200) {
-			String message = "FetchAndLock POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage() + "\nResponse: " + responseStr;
-			LOG.error(message);
-			throw new Exception(message);
-		}
-		try {
-			currentTaskIndex = 0;
-			currentTask = null;
-			fetchedTaskArray = (ArrayNode) objectMapper.readTree(responseStr);
-		} catch (Exception e) {
-			LOG.error("fetchAndLock failed to parse response: " + responseStr);
-			throw e;
+		currentTaskIndex = 0;
+		currentTask = null;
+		while (true) {
+			if (stopTimeReached()) {
+				break;
+			}
+			HttpClient client = createHttpClient();
+			String responseStr = client.post(getExternalTaskEndpointURL() + "/fetchAndLock", camundaUser, camundaPassword, requestPayload, true);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Response: " + responseStr);
+			}
+			if (client.getStatusCode() != 200) {
+				String message = "FetchAndLock POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage() + "\nResponse: " + responseStr;
+				LOG.error(message);
+				throw new Exception(message);
+			}
+			try {
+				fetchedTaskArray = (ArrayNode) objectMapper.readTree(responseStr);
+			} catch (Exception e) {
+				LOG.error("fetchAndLock failed to parse response: " + responseStr);
+				throw e;
+			}
+			if (fetchedTaskArray.size() > 0) {
+				break;
+			}
+			Thread.sleep(secondsBetweenFetches * 1000l);
 		}
 		return fetchedTaskArray.size();
 	}
@@ -71,15 +80,22 @@ public class FetchAndLock extends CamundaClient {
 			requestedVariables.add(var);
 		}
 	}
-
-	public boolean next() throws Exception {
+	
+	private boolean stopTimeReached() {
 		if (startTime > 0l && stopTime > 0l) {
 			// check the runtime but take care we are trying fetch at at least one time
 			long currentTime = System.currentTimeMillis();
 			if (currentTime >= stopTime) {
 				LOG.info("Stop fetching task because max runtime is reached.");
-				return false;
+				return true;
 			}
+		}
+		return false;
+	}
+
+	public boolean next() throws Exception {
+		if (stopTimeReached()) {
+			return false;
 		}
 		if (fetchedTaskArray == null) {
 			startTime = System.currentTimeMillis();
@@ -87,8 +103,8 @@ public class FetchAndLock extends CamundaClient {
 			fetchAndLock();
 		}
 		if (currentTaskIndex == fetchedTaskArray.size()) {
-			Thread.sleep(secondsBetweenFetches * 1000l);
 			LOG.debug("Fetch and lock for the next tasks");
+			Thread.sleep(secondsBetweenFetches * 1000l);
 			fetchAndLock();
 		}
 		if (fetchedTaskArray != null) {
