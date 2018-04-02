@@ -20,6 +20,9 @@ public class FetchAndLock extends CamundaClient {
 	private long startTime = 0;
 	private long stopTime = 0;
 	protected long lockDuration = 1000l;
+	private long numberFetches = 0;
+	private int numberSucessfulFetches = 0;
+	private int numberTasksReceived = 0;
 	
 	private ArrayNode getVariableNames() {
 		if (requestedVariables.isEmpty()) {
@@ -67,7 +70,10 @@ public class FetchAndLock extends CamundaClient {
 				LOG.error("fetchAndLock failed to parse response: " + responseStr);
 				throw e;
 			}
+			numberFetches++;
 			if (fetchedTaskArray.size() > 0) {
+				numberSucessfulFetches++;
+				numberTasksReceived = numberTasksReceived + fetchedTaskArray.size();
 				break;
 			}
 			Thread.sleep(secondsBetweenFetches * 1000l);
@@ -289,6 +295,22 @@ public class FetchAndLock extends CamundaClient {
 
 	public long getLockDuration() {
 		return lockDuration;
+	}
+
+	public ObjectNode getCurrentTask() {
+		return currentTask;
+	}
+
+	public long getNumberFetches() {
+		return numberFetches;
+	}
+
+	public int getNumberSucessfulFetches() {
+		return numberSucessfulFetches;
+	}
+
+	public int getNumberTasksReceived() {
+		return numberTasksReceived;
 	}
 
 }
