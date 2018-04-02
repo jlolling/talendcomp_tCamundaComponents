@@ -38,6 +38,7 @@
     String stopTime = ElementParameterParser.getValue(node, "__STOP_TIME__");
     String secondsBetweenFetches = ElementParameterParser.getValue(node, "__SECONDS_BETWEEN_FETCH__");
     String maxRetries = ElementParameterParser.getValue(node, "__MAX_RETRIES_AFTER_ERROR__");
+    String waitTimeAfterError = ElementParameterParser.getValue(node, "__WAIT_TIME_AFTER_ERROR__");
     String timeout = ElementParameterParser.getValue(node, "__TIMEOUT__");
 	 IConnection conn = null;
 	 List<? extends IConnection> outConns = NodeUtil.getOutgoingConnections(node, IConnectionCategory.DATA);
@@ -71,6 +72,9 @@
 	<%=cid%>.setSecondsBetweenFetches(<%=secondsBetweenFetches%>);
 <%	if (maxRetries != null && maxRetries.trim().isEmpty() == false) { %>
 	<%=cid%>.setMaxRetriesInCaseOfErrors(<%=maxRetries%>);
+<%	} %>
+<%	if (waitTimeAfterError != null && waitTimeAfterError.trim().isEmpty() == false) { %>
+	<%=cid%>.setWaitMillisAfterError(<%=waitTimeAfterError%>);
 <%	} %>
 <%	if (timeout != null && timeout.trim().isEmpty() == false) { %>
 	<%=cid%>.setTimeout(<%=timeout%>);

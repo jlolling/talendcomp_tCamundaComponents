@@ -19,6 +19,7 @@ public class CamundaClient {
 	protected String camundaUser = null;
 	protected String camundaPassword = null;
 	private int maxRetriesInCaseOfErrors = 1;
+	private long waitMillisAfterError = 1000l;
 	private int timeout = 10000;
 	protected final static ObjectMapper objectMapper = new ObjectMapper();
 	private Locale defaultLocale = Locale.ENGLISH;
@@ -39,6 +40,7 @@ public class CamundaClient {
 		HttpClient httpClient = new HttpClient();
 		httpClient.setTimeout(timeout);
 		httpClient.setMaxRetriesInCaseOfErrors(maxRetriesInCaseOfErrors);
+		httpClient.setWaitMillisAfterError(waitMillisAfterError);
 		return httpClient;
 	}
 
@@ -147,9 +149,25 @@ public class CamundaClient {
 		}
 	}
 
-	public void setTimeout(Long timeout) {
+	public void setTimeout(Number timeout) {
 		if (timeout != null) {
 			this.timeout = timeout.intValue();
+		}
+	}
+
+	public long getWaitMillisAfterError() {
+		return waitMillisAfterError;
+	}
+
+	public void setWaitMillisAfterError(Long waitMillisAfterError) {
+		if (waitMillisAfterError != null) {
+			this.waitMillisAfterError = waitMillisAfterError.longValue();
+		}
+	}
+
+	public void setWaitMillisAfterError(Integer waitMillisAfterError) {
+		if (waitMillisAfterError != null) {
+			this.waitMillisAfterError = waitMillisAfterError.longValue();
 		}
 	}
 

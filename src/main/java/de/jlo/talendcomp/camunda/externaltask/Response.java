@@ -26,6 +26,7 @@ public class Response extends CamundaClient {
 		setCamundaPassword(fetchAndLock.getCamundaPassword());
 		setTimeout(fetchAndLock.getTimeout());
 		setMaxRetriesInCaseOfErrors(fetchAndLock.getMaxRetriesInCaseOfErrors());
+		setWaitMillisAfterError(fetchAndLock.getWaitMillisAfterError());
 	}
 	
 	public void addVariable(String varName, Object value, String pattern) {

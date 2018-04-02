@@ -1,10 +1,7 @@
 package de.jlo.talendcomp.camunda.externaltask;
 
 import java.io.UnsupportedEncodingException;
-import java.net.NoRouteToHostException;
-import java.net.SocketException;
 import java.net.URL;
-import java.net.UnknownHostException;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.auth.AuthScope;
@@ -30,9 +27,9 @@ public class HttpClient {
 	private int connectionTimeout = 1000;
 	private int statusCode = 0;
 	private String statusMessage = null;
-	private int maxRetriesInCaseOfErrors = 1;
+	private int maxRetriesInCaseOfErrors = 0;
 	private int currentAttempt = 0;
-	private long waitMillisAfterError = 1000;
+	private long waitMillisAfterError = 1000l;
 	
 	public String get(String urlStr, String user, String password) throws Exception {
         CloseableHttpClient httpclient = createClient(urlStr, user, password);
@@ -85,16 +82,16 @@ public class HttpClient {
             	} else {
             		return "";
             	}
-            } catch (NoRouteToHostException e) {
-            	LOG.error("POST request: " + request.getURI() + " failed.", e);
-            	throw new Exception("POST request: " + request.getURI() + " failed.", e);
-            } catch (UnknownHostException e) {
-            	LOG.error("POST request: " + request.getURI() + " failed.", e);
-            	throw new Exception("POST request: " + request.getURI() + " failed.", e);
-            } catch (SocketException e) {
+//            } catch (NoRouteToHostException e) {
+//            	LOG.error("POST request: " + request.getURI() + " failed.", e);
+//            	throw new Exception("POST request: " + request.getURI() + " failed.", e);
+//            } catch (UnknownHostException e) {
+//            	LOG.error("POST request: " + request.getURI() + " failed.", e);
+//            	throw new Exception("POST request: " + request.getURI() + " failed.", e);
+            } catch (Exception e) {
             	if (currentAttempt <= maxRetriesInCaseOfErrors) {
                 	// this can happen, we try it again
-                	LOG.warn("POST request: " + request.getURI() + " failed (#" + currentAttempt + " attempt). Waiting " + waitMillisAfterError + "ms and retry request.", e);
+                	LOG.warn("POST request: " + request.getURI() + " failed (" + (currentAttempt + 1) + ". attempt). Waiting " + waitMillisAfterError + "ms and retry request.", e);
                 	Thread.sleep(waitMillisAfterError);
             	} else {
                 	LOG.error("POST request: " + request.getURI() + " failed.", e);

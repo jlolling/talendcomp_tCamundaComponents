@@ -20,6 +20,7 @@ public class CamundaClientTest {
 		cc.setCamundaPassword("talend_test");
 		cc.setWorkerId("camundaClientTest");
 		cc.setNumberTaskToFetch(1);
+		cc.setMaxRetriesInCaseOfErrors(4);
 		cc.setTopicName("calculateConflict");
 		cc.addVariable("calculateConflict");
 		cc.setLockDuration(10);
