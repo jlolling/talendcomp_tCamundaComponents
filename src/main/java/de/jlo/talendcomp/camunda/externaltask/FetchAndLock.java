@@ -144,7 +144,7 @@ public class FetchAndLock extends CamundaClient {
 		return id;
 	}
 
-	public JsonNode getCurrentTaskVariableValueAsObject(String varName) {
+	private JsonNode getCurrentTaskVariableValueNode(String varName, boolean missingAllowed, boolean nullable) throws Exception {
 		if (Util.isEmpty(varName)) {
 			throw new IllegalArgumentException("Variable name cannot be null or empty");
 		}
@@ -153,8 +153,14 @@ public class FetchAndLock extends CamundaClient {
 		}
 		JsonNode varNode = currentTask.get("variables");
 		if (varNode instanceof ObjectNode) {
-			JsonNode valueNode = varNode.path(varName);
-			if (valueNode.isNull() || valueNode.isMissingNode()) {
+			JsonNode valueNode = varNode.path(varName).path("value");
+			if (missingAllowed == false && valueNode.isMissingNode()) {
+				throw new Exception("The variable: " + varName + " is missing. Variables node: " + varNode.toString());
+			}
+			if (valueNode.isNull()) {
+				if (nullable == false) {
+					throw new Exception("The variable: " + varName + " is null. Variables node: " + varNode.toString());
+				}
 				return null;
 			} else {
 				return valueNode;
@@ -164,8 +170,23 @@ public class FetchAndLock extends CamundaClient {
 		}
 	}
 	
-	public String getCurrentTaskVariableValueAsString(String varName) {
-		JsonNode valueNode = getCurrentTaskVariableValueAsObject(varName);
+	public JsonNode getCurrentTaskVariableValueAsObject(String varName, boolean missingAllowed, boolean nullable) throws Exception {
+		JsonNode valueNode = getCurrentTaskVariableValueNode(varName, missingAllowed, nullable);
+		if (valueNode != null) {
+			String nodeStr = valueNode.asText();
+			try {
+				return objectMapper.readTree(nodeStr);
+			} catch (Exception e) {
+				String message = "Parse variable: " + varName + " as JSON failed: " + e.getMessage() + " content: " + nodeStr;
+				throw new Exception(message, e);
+			}
+		} else {
+			return null;
+		}
+	}
+
+	public String getCurrentTaskVariableValueAsString(String varName, boolean missingAllowed, boolean nullable) throws Exception {
+		JsonNode valueNode = getCurrentTaskVariableValueNode(varName, missingAllowed, nullable);
 		if (valueNode != null) {
 			return valueNode.asText();
 		} else {
@@ -173,73 +194,113 @@ public class FetchAndLock extends CamundaClient {
 		}
 	}
 
-	public Short getCurrentTaskVariableValueAsShort(String varName) throws Exception {
-		JsonNode valueNode = getCurrentTaskVariableValueAsObject(varName);
+	public Short getCurrentTaskVariableValueAsShort(String varName, boolean missingAllowed, boolean nullable) throws Exception {
+		JsonNode valueNode = getCurrentTaskVariableValueNode(varName, missingAllowed, nullable);
 		if (valueNode != null) {
-			return TypeUtil.convertToShort(valueNode);
+			try {
+				return TypeUtil.convertToShort(valueNode);
+			} catch (Exception e) {
+				String message = "Convert variable: " + varName + " to Short failed: " + e.getMessage() + " content: " + valueNode;
+				throw new Exception(message, e);
+			}
 		} else {
 			return null;
 		}
 	}
 
-	public Integer getCurrentTaskVariableValueAsInteger(String varName) throws Exception {
-		JsonNode valueNode = getCurrentTaskVariableValueAsObject(varName);
+	public Integer getCurrentTaskVariableValueAsInteger(String varName, boolean missingAllowed, boolean nullable) throws Exception {
+		JsonNode valueNode = getCurrentTaskVariableValueNode(varName, missingAllowed, nullable);
 		if (valueNode != null) {
-			return TypeUtil.convertToInteger(valueNode);
+			try {
+				return TypeUtil.convertToInteger(valueNode);
+			} catch (Exception e) {
+				String message = "Convert for variable: " + varName + " to Integer failed: " + e.getMessage() + " content: " + valueNode;
+				throw new Exception(message, e);
+			}
 		} else {
 			return null;
 		}
 	}
 
-	public Long getCurrentTaskVariableValueAsLong(String varName) throws Exception {
-		JsonNode valueNode = getCurrentTaskVariableValueAsObject(varName);
+	public Long getCurrentTaskVariableValueAsLong(String varName, boolean missingAllowed, boolean nullable) throws Exception {
+		JsonNode valueNode = getCurrentTaskVariableValueNode(varName, missingAllowed, nullable);
 		if (valueNode != null) {
-			return TypeUtil.convertToLong(valueNode);
+			try {
+				return TypeUtil.convertToLong(valueNode);
+			} catch (Exception e) {
+				String message = "Convert for variable: " + varName + " to Long failed: " + e.getMessage() + " content: " + valueNode;
+				throw new Exception(message, e);
+			}
 		} else {
 			return null;
 		}
 	}
 
-	public Double getCurrentTaskVariableValueAsDouble(String varName) throws Exception {
-		JsonNode valueNode = getCurrentTaskVariableValueAsObject(varName);
+	public Double getCurrentTaskVariableValueAsDouble(String varName, boolean missingAllowed, boolean nullable) throws Exception {
+		JsonNode valueNode = getCurrentTaskVariableValueNode(varName, missingAllowed, nullable);
 		if (valueNode != null) {
-			return TypeUtil.convertToDouble(valueNode);
+			try {
+				return TypeUtil.convertToDouble(valueNode);
+			} catch (Exception e) {
+				String message = "Convert for variable: " + varName + " to Double failed: " + e.getMessage() + " content: " + valueNode;
+				throw new Exception(message, e);
+			}
 		} else {
 			return null;
 		}
 	}
 
-	public Float getCurrentTaskVariableValueAsFloat(String varName) throws Exception {
-		JsonNode valueNode = getCurrentTaskVariableValueAsObject(varName);
+	public Float getCurrentTaskVariableValueAsFloat(String varName, boolean missingAllowed, boolean nullable) throws Exception {
+		JsonNode valueNode = getCurrentTaskVariableValueNode(varName, missingAllowed, nullable);
 		if (valueNode != null) {
-			return TypeUtil.convertToFloat(valueNode);
+			try {
+				return TypeUtil.convertToFloat(valueNode);
+			} catch (Exception e) {
+				String message = "Convert for variable: " + varName + " to Float failed: " + e.getMessage() + " content: " + valueNode;
+				throw new Exception(message, e);
+			}
 		} else {
 			return null;
 		}
 	}
 
-	public BigDecimal getCurrentTaskVariableValueAsBigDecimal(String varName) throws Exception {
-		JsonNode valueNode = getCurrentTaskVariableValueAsObject(varName);
+	public BigDecimal getCurrentTaskVariableValueAsBigDecimal(String varName, boolean missingAllowed, boolean nullable) throws Exception {
+		JsonNode valueNode = getCurrentTaskVariableValueNode(varName, missingAllowed, nullable);
 		if (valueNode != null) {
-			return TypeUtil.convertToBigDecimal(valueNode);
+			try {
+				return TypeUtil.convertToBigDecimal(valueNode);
+			} catch (Exception e) {
+				String message = "Convert for variable: " + varName + " to BigDecimal failed: " + e.getMessage() + " content: " + valueNode;
+				throw new Exception(message, e);
+			}
 		} else {
 			return null;
 		}
 	}
 
-	public Boolean getCurrentTaskVariableValueAsBoolean(String varName) throws Exception {
-		JsonNode valueNode = getCurrentTaskVariableValueAsObject(varName);
+	public Boolean getCurrentTaskVariableValueAsBoolean(String varName, boolean missingAllowed, boolean nullable) throws Exception {
+		JsonNode valueNode = getCurrentTaskVariableValueNode(varName, missingAllowed, nullable);
 		if (valueNode != null) {
-			return TypeUtil.convertToBoolean(valueNode);
+			try {
+				return TypeUtil.convertToBoolean(valueNode);
+			} catch (Exception e) {
+				String message = "Convert for variable: " + varName + " to Boolean failed: " + e.getMessage() + " content: " + valueNode;
+				throw new Exception(message, e);
+			}
 		} else {
 			return null;
 		}
 	}
 
-	public Date getCurrentTaskVariableValueAsDate(String varName, String pattern) throws Exception {
-		JsonNode valueNode = getCurrentTaskVariableValueAsObject(varName);
+	public Date getCurrentTaskVariableValueAsDate(String varName, String pattern, boolean missingAllowed, boolean nullable) throws Exception {
+		JsonNode valueNode = getCurrentTaskVariableValueNode(varName, missingAllowed, nullable);
 		if (valueNode != null) {
-			return parseDate(valueNode.asText(), pattern);
+			try {
+				return parseDate(valueNode.asText(), pattern);
+			} catch (Exception e) {
+				String message = "Convert for variable: " + varName + " to Date failed: " + e.getMessage() + " content: " + valueNode;
+				throw new Exception(message, e);
+			}
 		} else {
 			return null;
 		}

@@ -10,6 +10,7 @@
 		org.talend.core.model.utils.NodeUtil
 		org.talend.core.model.metadata.types.JavaTypesManager
 		java.util.List
+		java.util.Map
 		java.util.ArrayList
 	"
 %>
@@ -40,6 +41,7 @@
     String maxRetries = ElementParameterParser.getValue(node, "__MAX_RETRIES_AFTER_ERROR__");
     String waitTimeAfterError = ElementParameterParser.getValue(node, "__WAIT_TIME_AFTER_ERROR__");
     String timeout = ElementParameterParser.getValue(node, "__TIMEOUT__");
+ 	 List<Map<String, String>> configList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__COLUMN_CONFIG__");
 	 IConnection conn = null;
 	 List<? extends IConnection> outConns = NodeUtil.getOutgoingConnections(node, IConnectionCategory.DATA);
 	 if (outConns.size() > 0) {
@@ -98,14 +100,16 @@
 			if (pattern == null || pattern.trim().isEmpty()) {
 				pattern = "null";
 			}
+			Map<String, String> config = configList.get(i);
+			boolean allowMissing = "true".equals(config.get("MISSING_ATTRIBUTE_ALLOWED"));
 			String javaClassName = mc.getTalendType().substring(3);
 			String javaPackageClassName = JavaTypesManager.getTypeToGenerate(mc.getTalendType(), true);
 			boolean isDateValue = javaClassName.contains("Date"); %>
 			{
 <%			if (isDateValue) { %>
-				<%=javaPackageClassName%> var = <%=cid%>.getCurrentTaskVariableValueAsDate(<%=fieldLabel%>, <%=pattern%>);
+				<%=javaPackageClassName%> var = <%=cid%>.getCurrentTaskVariableValueAsDate(<%=fieldLabel%>, <%=pattern%>, <%=allowMissing%>, <%=mc.isNullable()%>);
 <%			} else { %>
-				<%=javaPackageClassName%> var = <%=cid%>.getCurrentTaskVariableValueAs<%=javaClassName%>(<%=fieldLabel%>);
+				<%=javaPackageClassName%> var = <%=cid%>.getCurrentTaskVariableValueAs<%=javaClassName%>(<%=fieldLabel%>, <%=allowMissing%>, <%=mc.isNullable()%>);
 <%			} %>
 				globalMap.put("<%=cid%>.<%=mc.getLabel()%>", var);
 <% 		if (conn != null) { %>

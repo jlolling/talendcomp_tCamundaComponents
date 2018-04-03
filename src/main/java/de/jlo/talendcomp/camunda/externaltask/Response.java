@@ -84,6 +84,7 @@ public class Response extends CamundaClient {
 		ObjectNode requestPayload = objectMapper.createObjectNode();
 		requestPayload.put("workerId", workerId);
 		requestPayload.set("variables", currentVariablesNode);
+		currentVariablesNode = null; // set node to null to force creating a new one for the next complete call
 		HttpClient client = createHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/complete", camundaUser, camundaPassword, requestPayload, false);
 		if (client.getStatusCode() != 204) {
@@ -91,7 +92,6 @@ public class Response extends CamundaClient {
 			LOG.error(message);
 			throw new Exception(message);
 		}
-		currentVariablesNode = null;
 	}
 	
 	public void bpmnError(String errorCode) throws Exception {
