@@ -32,6 +32,8 @@
 	 }
 	 List<Map<String, String>> variables = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__VARIABLES__");
 	 boolean valuesFromFlow = "true".equals(ElementParameterParser.getValue(node, "__TAKE_VALUE_FROM_FLOW__"));
+	 boolean checkLockExpirationTime = "true".equals(ElementParameterParser.getValue(node, "__CHECK_LOCK_EXPIRATION__"));
+	 boolean suppressExpiredTasks = "true".equals(ElementParameterParser.getValue(node, "__SUPPRESS_EXPIRED_TASK__"));
     String fetchAndLock = ElementParameterParser.getValue(node, "__FETCH_AND_LOCK_COMPONENT__");
 %>
 	de.jlo.talendcomp.camunda.externaltask.Response <%=cid%> = (de.jlo.talendcomp.camunda.externaltask.Response) globalMap.get("<%=cid%>");
@@ -39,6 +41,8 @@
 		<%=cid%> = new de.jlo.talendcomp.camunda.externaltask.Response((de.jlo.talendcomp.camunda.externaltask.FetchAndLock) globalMap.get("<%=fetchAndLock%>"));
 		globalMap.put("<%=cid%>", <%=cid%>);
 	}
+	<%=cid%>.setCheckLockExpiration(<%=checkLockExpirationTime%>);
+	<%=cid%>.setSuppressExpiredTasks(<%=suppressExpiredTasks%>);
 	try {
 <%	for (int i = 0; i < listColumns.size(); i++) {
 		IMetadataColumn mc = listColumns.get(i);
@@ -57,6 +61,7 @@
 <%		} %>
 <%	} %>
 		<%=cid%>.complete();
+		globalMap.put("<%=cid%>_CURRENT_TASK_IS_EXPIRED", <%=cid%>.isCurrentTaskExpired());
 		Integer count_<%=cid%> = (Integer) globalMap.get("<%=cid%>_NB_LINE");
 		if (count_<%=cid%> == null) {
 			count_<%=cid%> = 0;
@@ -64,6 +69,7 @@
 		count_<%=cid%> = count_<%=cid%> + 1;
 		globalMap.put("<%=cid%>_NB_LINE", count_<%=cid%>);	
 	} catch (Exception ex) {
+		globalMap.put("<%=cid%>_CURRENT_TASK_IS_EXPIRED", <%=cid%>.isCurrentTaskExpired());
 		globalMap.put("<%=cid%>_ERROR_MESSAGE", ex.getMessage());
 		throw ex;
 	}

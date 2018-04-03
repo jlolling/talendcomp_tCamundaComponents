@@ -1,6 +1,8 @@
 package de.jlo.talendcomp.camunda.externaltask;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -100,6 +102,9 @@ public class FetchAndLock extends CamundaClient {
 	}
 
 	public boolean next() throws Exception {
+		if (Thread.currentThread().isInterrupted()) {
+			return false;
+		}
 		if (stopTimeReached()) {
 			return false;
 		}
@@ -133,6 +138,27 @@ public class FetchAndLock extends CamundaClient {
 		return id;
 	}
 	
+	public Date getCurrentTaskLockExpirationTime() throws Exception {
+		if (currentTask == null || currentTask.isNull()) {
+			throw new IllegalStateException("Current task not fetched");
+		}
+		String s = currentTask.path("lockExpirationTime").asText();
+		if (s != null && s.trim().isEmpty() == false) {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+			Date time = null;
+			try {
+				time = sdf.parse(s);
+			} catch (ParseException e) {
+				String message = "Parse lockExpirationTime failed. Value: " + s + " error: " + e.getMessage();
+				LOG.warn(message, e);
+				return null;
+			}
+			return time;
+		} else {
+			return null;
+		}
+	}
+
 	public String getCurrentTaskProcessInstanceId() {
 		if (currentTask == null || currentTask.isNull()) {
 			throw new IllegalStateException("Current task not fetched");

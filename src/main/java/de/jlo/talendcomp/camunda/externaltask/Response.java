@@ -13,6 +13,9 @@ public class Response extends CamundaClient {
 	private String taskId = null;
 	private ObjectNode currentVariablesNode = null;
 	private FetchAndLock fetchAndLock = null;
+	private boolean checkLockExpiration = true;
+	private boolean suppressExpiredTasks = false;
+	private boolean currentTaskExpired = false;
 	
 	public Response(FetchAndLock fetchAndLock) {
 		if (fetchAndLock == null) {
@@ -39,9 +42,10 @@ public class Response extends CamundaClient {
 		if (value != null) {
 			ObjectNode varNode = currentVariablesNode.with(varName);
 			varNode.put("type", value.getClass().getName());
+			varNode.set("valueInfo", objectMapper.createObjectNode());
 			if (value instanceof Date) {
 				if (Util.isEmpty(pattern)) {
-					throw new IllegalArgumentException("addVariable var name:" + varName + " failed. pattern is mandatory for Date typed values");
+					pattern = "yyyy-MM-dd'T'HH:mm:ss";
 				}
 				SimpleDateFormat sdf = new SimpleDateFormat(pattern);
 				String strValue = sdf.format((Date) value);
@@ -73,6 +77,7 @@ public class Response extends CamundaClient {
 	}
 	
 	public void complete() throws Exception {
+		currentTaskExpired = false;
 		workerId = fetchAndLock.getWorkerId();
 		if (workerId == null) {
 			throw new IllegalStateException("workerId not provided by the fetchAndLock component");
@@ -80,6 +85,17 @@ public class Response extends CamundaClient {
 		taskId = fetchAndLock.getCurrentTaskId();
 		if (taskId == null) {
 			throw new IllegalStateException("taskId not provided by the fetchAndLock component");
+		}
+		if (checkLockExpiration) {
+			Date taskLockExpirationTime = fetchAndLock.getCurrentTaskLockExpirationTime();
+			if (taskLockExpirationTime != null && new Date().before(taskLockExpirationTime) == false) {
+				currentTaskExpired = true;
+				if (suppressExpiredTasks) {
+					LOG.warn("Task: " + fetchAndLock.getCurrentTask().toString() + " has been expired and will be ignored");
+				} else {
+					throw new Exception("Lock expiration time exceeded for Task: " + fetchAndLock.getCurrentTask().toString());
+				}
+			}
 		}
 		ObjectNode requestPayload = objectMapper.createObjectNode();
 		requestPayload.put("workerId", workerId);
@@ -170,6 +186,30 @@ public class Response extends CamundaClient {
 			throw new IllegalArgumentException("taskId cannot be null or empty");
 		}
 		this.taskId = taskId;
+	}
+
+	public boolean isCheckLockExpiration() {
+		return checkLockExpiration;
+	}
+
+	public void setCheckLockExpiration(Boolean checkLockExpiration) {
+		if (checkLockExpiration != null) {
+			this.checkLockExpiration = checkLockExpiration.booleanValue();
+		}
+	}
+
+	public boolean isSuppressExpiredTasks() {
+		return suppressExpiredTasks;
+	}
+
+	public void setSuppressExpiredTasks(Boolean suppressExpiredTasks) {
+		if (suppressExpiredTasks != null) {
+			this.suppressExpiredTasks = suppressExpiredTasks.booleanValue();
+		}
+	}
+
+	public boolean isCurrentTaskExpired() {
+		return currentTaskExpired;
 	}
 
 }

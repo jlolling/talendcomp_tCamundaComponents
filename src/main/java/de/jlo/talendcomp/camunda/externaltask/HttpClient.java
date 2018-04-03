@@ -68,6 +68,9 @@ public class HttpClient {
 
 	private String execute(CloseableHttpClient httpclient, HttpPost request, boolean expectResponse) throws Exception {
 		for (currentAttempt = 0; currentAttempt <= maxRetriesInCaseOfErrors; currentAttempt++) {
+			if (Thread.currentThread().isInterrupted()) {
+				break;
+			}
             CloseableHttpResponse response = null;
             try {
             	response = httpclient.execute(request);
@@ -82,12 +85,6 @@ public class HttpClient {
             	} else {
             		return "";
             	}
-//            } catch (NoRouteToHostException e) {
-//            	LOG.error("POST request: " + request.getURI() + " failed.", e);
-//            	throw new Exception("POST request: " + request.getURI() + " failed.", e);
-//            } catch (UnknownHostException e) {
-//            	LOG.error("POST request: " + request.getURI() + " failed.", e);
-//            	throw new Exception("POST request: " + request.getURI() + " failed.", e);
             } catch (Exception e) {
             	if (currentAttempt <= maxRetriesInCaseOfErrors) {
                 	// this can happen, we try it again
