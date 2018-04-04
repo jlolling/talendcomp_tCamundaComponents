@@ -9,6 +9,7 @@
 	 CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
     INode node = (INode) codeGenArgument.getArgument();
     String cid = node.getUniqueName();
+	 boolean debug = "true".equals(ElementParameterParser.getValue(node, "__DEBUG__"));
     String fetchAndLock = ElementParameterParser.getValue(node, "__FETCH_AND_LOCK_COMPONENT__");
 %>
 	de.jlo.talendcomp.camunda.externaltask.Response <%=cid%> = (de.jlo.talendcomp.camunda.externaltask.Response) globalMap.get("<%=cid%>");
@@ -16,6 +17,7 @@
 		<%=cid%> = new de.jlo.talendcomp.camunda.externaltask.Response((de.jlo.talendcomp.camunda.externaltask.FetchAndLock) globalMap.get("<%=fetchAndLock%>"));
 		globalMap.put("<%=cid%>", <%=cid%>);
 	}
+	<%=cid%>.setDebug(<%=debug%>);
 	try {
 		<%=cid%>.unlock();
 		Integer count_<%=cid%> = (Integer) globalMap.get("<%=cid%>_NB_LINE");

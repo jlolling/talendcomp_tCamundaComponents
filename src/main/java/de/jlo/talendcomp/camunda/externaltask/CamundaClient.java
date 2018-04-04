@@ -4,14 +4,14 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.Locale;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class CamundaClient {
 	
-	protected static Logger LOG = LoggerFactory.getLogger(CamundaClient.class);
+	protected static Logger LOG = Logger.getLogger(CamundaClient.class);
 	protected String topicName = null;
 	protected String workerId = null;
 	private String camundaServiceEndpointURL = null;
@@ -38,6 +38,7 @@ public class CamundaClient {
 			}
 		}
 		HttpClient httpClient = new HttpClient();
+		httpClient.setDebug(isDebug());
 		httpClient.setTimeout(timeout);
 		httpClient.setMaxRetriesInCaseOfErrors(maxRetriesInCaseOfErrors);
 		httpClient.setWaitMillisAfterError(waitMillisAfterError);
@@ -168,6 +169,20 @@ public class CamundaClient {
 	public void setWaitMillisAfterError(Integer waitMillisAfterError) {
 		if (waitMillisAfterError != null) {
 			this.waitMillisAfterError = waitMillisAfterError.longValue();
+		}
+	}
+	
+	public boolean isDebug() {
+		return LOG.isDebugEnabled();
+	}
+	
+	public void setDebug(Boolean debug) {
+		if (debug != null) {
+			if (debug == true) {
+				LOG.setLevel(Level.DEBUG);
+			} else {
+				LOG.setLevel(Level.INFO);
+			}
 		}
 	}
 

@@ -16,14 +16,14 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class HttpClient {
 	
-	private static Logger LOG = LoggerFactory.getLogger(HttpClient.class);
+	private static Logger LOG = Logger.getLogger(HttpClient.class);
 	private int connectionTimeout = 1000;
 	private int statusCode = 0;
 	private String statusMessage = null;
@@ -73,10 +73,13 @@ public class HttpClient {
 			}
             CloseableHttpResponse response = null;
             try {
+            	if (LOG.isDebugEnabled()) {
+            		LOG.debug("Send request: " + request + " with payload: " + request.getEntity().getContent());
+            	}
             	response = httpclient.execute(request);
             	statusCode = response.getStatusLine().getStatusCode();
             	statusMessage = response.getStatusLine().getReasonPhrase();
-            	if (expectResponse) {
+            	if (expectResponse || (statusCode != 204 && statusCode != 205)) {
                 	String responseContent = EntityUtils.toString(response.getEntity());
                 	if (Util.isEmpty(responseContent)) {
                 		throw new Exception("Empty response received.");
@@ -208,6 +211,20 @@ public class HttpClient {
 	public void setWaitMillisAfterError(Long waitMillisAfterError) {
 		if (waitMillisAfterError != null) {
 			this.waitMillisAfterError = waitMillisAfterError;
+		}
+	}
+
+	public boolean isDebug() {
+		return LOG.isDebugEnabled();
+	}
+	
+	public void setDebug(Boolean debug) {
+		if (debug != null) {
+			if (debug == true) {
+				LOG.setLevel(Level.DEBUG);
+			} else {
+				LOG.setLevel(Level.INFO);
+			}
 		}
 	}
 

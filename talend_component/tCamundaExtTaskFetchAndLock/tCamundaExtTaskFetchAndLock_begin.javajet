@@ -15,9 +15,10 @@
 	"
 %>
 <%
-	  CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+	 CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
     INode node = (INode) codeGenArgument.getArgument();
     String cid = node.getUniqueName();
+	 boolean debug = "true".equals(ElementParameterParser.getValue(node, "__DEBUG__"));
     String server = ElementParameterParser.getValue(node, "__CAMUNDA_SERVICE__");
     String engine = ElementParameterParser.getValue(node, "__CAMUNDA_ENGINE__");
     boolean needAuthentication = "true".equals(ElementParameterParser.getValue(node, "__NEED_AUTHENTICATION__"));
@@ -57,6 +58,7 @@
 	 }
 %>
 	de.jlo.talendcomp.camunda.externaltask.FetchAndLock <%=cid%> = new de.jlo.talendcomp.camunda.externaltask.FetchAndLock();
+	<%=cid%>.setDebug(<%=debug%>);
 	<%=cid%>.setCamundaServiceURL(<%=server%>);
 	<%=cid%>.setCamundaEngine(<%=engine%>);
 	<%=cid%>.setNeedAuthorization(<%=needAuthentication%>);
