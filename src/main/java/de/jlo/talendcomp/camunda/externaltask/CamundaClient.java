@@ -15,6 +15,7 @@ public class CamundaClient {
 	protected String topicName = null;
 	protected String workerId = null;
 	private String camundaServiceEndpointURL = null;
+	private String alternativeEndpoint = null;
 	private boolean needAuthorization = true;
 	protected String camundaUser = null;
 	protected String camundaPassword = null;
@@ -92,7 +93,11 @@ public class CamundaClient {
 	}
 
 	protected String getExternalTaskEndpointURL() {
-		return camundaServiceEndpointURL + "/engine-rest/engine/" + camundaEngine + "/external-task";
+		if (alternativeEndpoint != null) {
+			return alternativeEndpoint;
+		} else {
+			return camundaServiceEndpointURL + "/engine-rest/engine/" + camundaEngine + "/external-task";
+		}
 	}
 	
 	public boolean isNeedAuthorization() {
@@ -183,6 +188,16 @@ public class CamundaClient {
 			} else {
 				LOG.setLevel(Level.INFO);
 			}
+		}
+	}
+
+	public String getAlternateEndpoint() {
+		return alternativeEndpoint;
+	}
+
+	public void setAlternateEndpoint(String alternativeEndpoint) {
+		if (Util.isEmpty(alternativeEndpoint) == false) {
+			this.alternativeEndpoint = alternativeEndpoint.trim();
 		}
 	}
 

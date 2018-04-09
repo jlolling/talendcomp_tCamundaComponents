@@ -19,6 +19,11 @@
     INode node = (INode) codeGenArgument.getArgument();
     String cid = node.getUniqueName();
 	 boolean debug = "true".equals(ElementParameterParser.getValue(node, "__DEBUG__"));
+    boolean useAlternateEndpoint = "true".equals(ElementParameterParser.getValue(node, "__USE_ALTERNATE_ENDPOINT__"));
+    String alternateEndpoint = ElementParameterParser.getValue(node, "__ALTERNATE_ENDPOINT__");
+    if (alternateEndpoint == null || alternateEndpoint.trim().isEmpty()) {
+    	  alternateEndpoint = "null";
+    }
     String server = ElementParameterParser.getValue(node, "__CAMUNDA_SERVICE__");
     String engine = ElementParameterParser.getValue(node, "__CAMUNDA_ENGINE__");
     boolean needAuthentication = "true".equals(ElementParameterParser.getValue(node, "__NEED_AUTHENTICATION__"));
@@ -59,8 +64,12 @@
 %>
 	de.jlo.talendcomp.camunda.externaltask.FetchAndLock <%=cid%> = new de.jlo.talendcomp.camunda.externaltask.FetchAndLock();
 	<%=cid%>.setDebug(<%=debug%>);
+<% if (useAlternateEndpoint) { %>
+	<%=cid%>.setAlternateEndpoint(<%=alternateEndpoint%>);
+<% } else { %>
 	<%=cid%>.setCamundaServiceURL(<%=server%>);
 	<%=cid%>.setCamundaEngine(<%=engine%>);
+<% } %>
 	<%=cid%>.setNeedAuthorization(<%=needAuthentication%>);
 <%	if (needAuthentication) { %>
 	<%=cid%>.setCamundaUser(<%=user%>);
