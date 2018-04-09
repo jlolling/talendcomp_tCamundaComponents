@@ -20,19 +20,19 @@
     <CONNECTOR CTYPE="RUN_IF"/> 
   </CONNECTORS>  
   <PARAMETERS> 
-    <PARAMETER NAME="SCHEMA" FIELD="SCHEMA_TYPE" REQUIRED="true" NUM_ROW="10"> 
+    <PARAMETER NAME="FETCH_AND_LOCK_COMPONENT" FIELD="COMPONENT_LIST" FILTER="tCamundaExtTaskFetchAndLock" REQUIRED="true" NUM_ROW="10"/>  
+    <PARAMETER NAME="SCHEMA" FIELD="SCHEMA_TYPE" REQUIRED="true" GROUP="RESPONSE" NUM_ROW="20"> 
       <TABLE READONLY="true"> 
-        <COLUMN NAME="errorMessage" TYPE="id_String" READONLY="true" CUSTOM="true" LENGTH="512" NULLABLE="true" COMMENT="An message indicating the reason of the failure"/>  
+        <COLUMN NAME="errorMessage" TYPE="id_String" READONLY="true" CUSTOM="true" LENGTH="512" NULLABLE="false" COMMENT="A message indicating the reason of the failure"/>  
         <COLUMN NAME="errorDetails" TYPE="id_String" READONLY="true" CUSTOM="true" LENGTH="512" NULLABLE="true" COMMENT="A detailed error description"/>  
         <COLUMN NAME="retries" TYPE="id_Integer" READONLY="true" CUSTOM="true" LENGTH="12" NULLABLE="true" COMMENT="A number of how often the task should be retried"/>  
         <COLUMN NAME="retryTimeout" TYPE="id_Long" READONLY="true" CUSTOM="true" LENGTH="22" NULLABLE="true" COMMENT="A timeout in milliseconds before the external task becomes available again for fetching"/> 
       </TABLE> 
     </PARAMETER>  
-    <PARAMETER NAME="FETCH_AND_LOCK_COMPONENT" FIELD="COMPONENT_LIST" FILTER="tCamundaExtTaskFetchAndLock" REQUIRED="true" NUM_ROW="20"/>  
-    <PARAMETER NAME="TAKE_VALUE_FROM_FLOW" FIELD="CHECK" NUM_ROW="30"> 
+    <PARAMETER NAME="TAKE_VALUE_FROM_FLOW" FIELD="CHECK" GROUP="RESPONSE" NUM_ROW="30"> 
       <DEFAULT>true</DEFAULT> 
     </PARAMETER>  
-    <PARAMETER NAME="VARIABLES" FIELD="TABLE" NUM_ROW="40" NB_LINES="5" SHOW_IF="TAKE_VALUE_FROM_FLOW == 'false'"> 
+    <PARAMETER NAME="VARIABLES" FIELD="TABLE" GROUP="RESPONSE" NUM_ROW="40" NB_LINES="5" SHOW_IF="TAKE_VALUE_FROM_FLOW == 'false'"> 
       <ITEMS BASED_ON_SCHEMA="true"> 
         <ITEM NAME="VALUE" FIELD="TEXT"/> 
       </ITEMS> 

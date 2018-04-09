@@ -7,7 +7,6 @@
 		org.talend.core.model.process.IConnection
 		org.talend.core.model.utils.NodeUtil
 		java.util.List
-		java.util.Map
 	"
 %>
 <%
@@ -20,7 +19,10 @@
 	 if (outConns.size() > 0) {
 		  conn = outConns.get(0);
 	 }
-	 List<Map<String, String>> variables = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__VARIABLES__");
+	 String errorCode = ElementParameterParser.getValue(node, "__ERROR_CODE__");
+	 if (errorCode == null || errorCode.trim().isEmpty()) {
+	 	  errorCode = "null";
+	 }
 	 boolean valuesFromFlow = "true".equals(ElementParameterParser.getValue(node, "__TAKE_VALUE_FROM_FLOW__"));
     String fetchAndLock = ElementParameterParser.getValue(node, "__FETCH_AND_LOCK_COMPONENT__");
 %>
@@ -33,13 +35,8 @@
 	try {
 <%	if (conn != null && valuesFromFlow) { %>
 		<%=cid%>.bpmnError(<%=conn.getName()%>.errorCode);
-<% } else {
-			Map<String, String> entry = variables.get(0);
-			String value = entry.get("VALUE");
-			if (value == null || value.trim().isEmpty()) {
-				value = "null";
-			} %>
-		<%=cid%>.bpmnError(<%=value%>);
+<% } else { %>
+		<%=cid%>.bpmnError(<%=errorCode%>);
 <%	} %>
 
 		Integer count_<%=cid%> = (Integer) globalMap.get("<%=cid%>_NB_LINE");
