@@ -48,15 +48,6 @@ public class HttpClient {
         }
 	}
 	
-	private HttpEntity buildEntity(String content, String encoding) throws UnsupportedEncodingException {
-		if (content != null && content.trim().isEmpty() == false) {
-			HttpEntity entity = new StringEntity(content);
-			return entity;
-		} else {
-			return null;
-		}
-	}
-	
 	private HttpEntity buildEntity(JsonNode node) throws UnsupportedEncodingException {
 		if (node != null && node.isNull() == false && node.isMissingNode() == false) {
 			HttpEntity entity = new StringEntity(node.toString());
@@ -74,7 +65,7 @@ public class HttpClient {
             CloseableHttpResponse response = null;
             try {
             	if (LOG.isDebugEnabled()) {
-            		LOG.debug("Send request: " + request + " with payload: " + request.getEntity().getContent());
+            		LOG.debug("Execute request: " + request);
             	}
             	response = httpclient.execute(request);
             	statusCode = response.getStatusLine().getStatusCode();
@@ -108,6 +99,9 @@ public class HttpClient {
 	}
 
 	public String post(String urlStr, String user, String password, JsonNode node, boolean expectResponse) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("POST " + urlStr + " body: " + node.toString());
+		}
         CloseableHttpClient httpclient = createClient(urlStr, user, password); 
         HttpPost request = new HttpPost(urlStr);
         request.getConfig();
@@ -119,18 +113,6 @@ public class HttpClient {
         return execute(httpclient, request, expectResponse);
 	}
 
-	public String post(String urlStr, String user, String password, String content, String encoding, boolean expectResponse) throws Exception {
-        CloseableHttpClient httpclient = createClient(urlStr, user, password);
-        HttpPost request = new HttpPost(urlStr);
-        request.getConfig();
-        if (content != null) {
-            request.setEntity(buildEntity(content, encoding));
-            request.addHeader("Content-Type", "application/json;charset=UTF-8");
-            request.addHeader("Accept", "application/json");
-        }
-        return execute(httpclient, request, expectResponse);
-	}
-	
 	private CloseableHttpClient createClient(String urlStr, String user, String password) throws Exception {
         CredentialsProvider credsProvider = new BasicCredentialsProvider();
         if (user != null && user.trim().isEmpty() == false) {

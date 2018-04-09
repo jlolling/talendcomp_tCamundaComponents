@@ -27,17 +27,6 @@ public class CamundaClient {
 	private String camundaEngine = "default";
 	
 	protected HttpClient createHttpClient() throws Exception {
-		if (Util.isEmpty(camundaServiceEndpointURL)) {
-			throw new IllegalStateException("Camunda REST service endpoint URL not set");
-		}
-		if (needAuthorization) {
-			if (Util.isEmpty(camundaUser)) {
-				throw new IllegalStateException("User not set");
-			}
-			if (Util.isEmpty(camundaPassword)) {
-				throw new IllegalStateException("Password not set");
-			}
-		}
 		HttpClient httpClient = new HttpClient();
 		httpClient.setDebug(isDebug());
 		httpClient.setTimeout(timeout);
@@ -66,13 +55,12 @@ public class CamundaClient {
 	}
 
 	public void setCamundaServiceURL(String camundaURL) {
-		if (Util.isEmpty(camundaURL)) {
-			throw new IllegalArgumentException("Camunda service URL cannot be null or empty");
+		if (Util.isEmpty(camundaURL) == false) {
+			if (camundaURL.endsWith("/")) {
+				camundaURL = camundaURL.substring(0, camundaURL.length());
+			}
+			this.camundaServiceEndpointURL = camundaURL;
 		}
-		if (camundaURL.endsWith("/")) {
-			camundaURL = camundaURL.substring(0, camundaURL.length());
-		}
-		this.camundaServiceEndpointURL = camundaURL;
 	}
 
 	public String getCamundaUser() {
@@ -95,8 +83,10 @@ public class CamundaClient {
 	protected String getExternalTaskEndpointURL() {
 		if (alternativeEndpoint != null) {
 			return alternativeEndpoint;
-		} else {
+		} else if (camundaServiceEndpointURL != null) {
 			return camundaServiceEndpointURL + "/engine-rest/engine/" + camundaEngine + "/external-task";
+		} else {
+			throw new IllegalStateException("Neither camundaServiceEndpointURL or alternativeEndpoint is set.");
 		}
 	}
 	

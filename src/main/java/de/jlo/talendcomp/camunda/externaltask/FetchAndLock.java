@@ -38,6 +38,9 @@ public class FetchAndLock extends CamundaClient {
 	}
 	
 	public int fetchAndLock() throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("################ fetch and lock #################");
+		}
 		if (workerId == null) {
 			throw new IllegalStateException("initialize failed: workerId is not set");
 		}
@@ -51,7 +54,7 @@ public class FetchAndLock extends CamundaClient {
 					.put("lockDuration", lockDuration)
 					.set("variables", getVariableNames());
 		currentTaskIndex = 0;
-		currentTask = null;
+		fetchedTaskArray = null;
 		while (true) {
 			if (stopTimeReached()) {
 				break;
@@ -78,9 +81,12 @@ public class FetchAndLock extends CamundaClient {
 				numberTasksReceived = numberTasksReceived + fetchedTaskArray.size();
 				break;
 			}
-			Thread.sleep(secondsBetweenFetches * 1000l);
 		}
-		return fetchedTaskArray.size();
+		if (fetchedTaskArray != null) {
+			return fetchedTaskArray.size();
+		} else {
+			return 0;
+		}
 	}
 	
 	public void addVariable(String var) {
@@ -102,6 +108,7 @@ public class FetchAndLock extends CamundaClient {
 	}
 
 	public boolean next() throws Exception {
+		currentTask = null;
 		if (Thread.currentThread().isInterrupted()) {
 			return false;
 		}
@@ -114,13 +121,16 @@ public class FetchAndLock extends CamundaClient {
 			fetchAndLock();
 		}
 		if (currentTaskIndex == fetchedTaskArray.size()) {
-			LOG.debug("Fetch and lock for the next tasks");
+			LOG.debug("Fetch and lock for the next tasks. Wait " + secondsBetweenFetches + "s before.");
 			Thread.sleep(secondsBetweenFetches * 1000l);
 			fetchAndLock();
 		}
 		if (fetchedTaskArray != null) {
 			if (currentTaskIndex < fetchedTaskArray.size()) {
 				currentTask = (ObjectNode) fetchedTaskArray.get(currentTaskIndex++);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Current task: " + currentTask);
+				}
 				return true;
 			}
 		}

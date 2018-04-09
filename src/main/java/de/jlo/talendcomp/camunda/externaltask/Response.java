@@ -23,6 +23,7 @@ public class Response extends CamundaClient {
 		}
 		this.fetchAndLock = fetchAndLock;
 		setCamundaServiceURL(fetchAndLock.getCamundaServiceURL());
+		setAlternateEndpoint(fetchAndLock.getAlternateEndpoint());
 		setCamundaEngine(fetchAndLock.getCamundaEngine());
 		setNeedAuthorization(fetchAndLock.isNeedAuthorization());
 		setCamundaUser(fetchAndLock.getCamundaUser());
@@ -41,7 +42,7 @@ public class Response extends CamundaClient {
 		}
 		if (value != null) {
 			ObjectNode varNode = currentVariablesNode.with(varName);
-			varNode.put("type", value.getClass().getName());
+			//varNode.put("type", value.getClass().getName());
 			varNode.set("valueInfo", objectMapper.createObjectNode());
 			if (value instanceof Date) {
 				if (Util.isEmpty(pattern)) {
