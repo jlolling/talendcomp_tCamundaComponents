@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class CamundaClient {
 	
-	protected static Logger LOG = Logger.getLogger(CamundaClient.class);
+	protected Logger LOG = Logger.getLogger(CamundaClient.class.getClass().getName());
 	protected String topicName = null;
 	protected String workerId = null;
 	private String camundaServiceEndpointURL = null;
@@ -25,6 +25,10 @@ public class CamundaClient {
 	protected final static ObjectMapper objectMapper = new ObjectMapper();
 	private Locale defaultLocale = Locale.ENGLISH;
 	private String camundaEngine = "default";
+	
+	public void initLogger(String compName) {
+		LOG = Logger.getLogger(CamundaClient.class.getClass().getName() + "." + compName);
+	}
 	
 	protected HttpClient createHttpClient() throws Exception {
 		HttpClient httpClient = new HttpClient();
@@ -175,8 +179,10 @@ public class CamundaClient {
 		if (debug != null) {
 			if (debug == true) {
 				LOG.setLevel(Level.DEBUG);
+				Logger.getRootLogger().setLevel(Level.DEBUG);
 			} else {
 				LOG.setLevel(Level.INFO);
+				Logger.getRootLogger().setLevel(Level.INFO);
 			}
 		}
 	}

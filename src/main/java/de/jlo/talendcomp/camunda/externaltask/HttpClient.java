@@ -39,7 +39,7 @@ public class HttpClient {
             try {
             	statusCode = response.getStatusLine().getStatusCode();
             	statusMessage = response.getStatusLine().getReasonPhrase();
-                return EntityUtils.toString(response.getEntity());
+                return EntityUtils.toString(response.getEntity(), "UTF-8");
             } finally {
                 response.close();
             }
@@ -50,7 +50,7 @@ public class HttpClient {
 	
 	private HttpEntity buildEntity(JsonNode node) throws UnsupportedEncodingException {
 		if (node != null && node.isNull() == false && node.isMissingNode() == false) {
-			HttpEntity entity = new StringEntity(node.toString());
+			HttpEntity entity = new StringEntity(node.toString(), "UTF-8");
 			return entity;
 		} else {
 			return null;
@@ -71,7 +71,7 @@ public class HttpClient {
             	statusCode = response.getStatusLine().getStatusCode();
             	statusMessage = response.getStatusLine().getReasonPhrase();
             	if (expectResponse || (statusCode != 204 && statusCode != 205)) {
-                	String responseContent = EntityUtils.toString(response.getEntity());
+                	String responseContent = EntityUtils.toString(response.getEntity(), "UTF-8");
                 	if (Util.isEmpty(responseContent)) {
                 		throw new Exception("Empty response received.");
                 	}

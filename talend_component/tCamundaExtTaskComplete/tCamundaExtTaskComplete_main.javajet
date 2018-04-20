@@ -31,7 +31,7 @@
     		   listColumns = metadata.getListColumns();
 		  }
 	 }
-	 List<Map<String, String>> variables = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__VARIABLES__");
+	 List<Map<String, String>> configList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__VARIABLES__");
 	 boolean valuesFromFlow = "true".equals(ElementParameterParser.getValue(node, "__TAKE_VALUE_FROM_FLOW__"));
 	 boolean checkLockExpirationTime = "true".equals(ElementParameterParser.getValue(node, "__CHECK_LOCK_EXPIRATION__"));
 	 boolean suppressExpiredTasks = "true".equals(ElementParameterParser.getValue(node, "__SUPPRESS_EXPIRED_TASK__"));
@@ -40,25 +40,30 @@
 	de.jlo.talendcomp.camunda.externaltask.Response <%=cid%> = (de.jlo.talendcomp.camunda.externaltask.Response) globalMap.get("<%=cid%>");
 	if (<%=cid%> == null) {
 		<%=cid%> = new de.jlo.talendcomp.camunda.externaltask.Response((de.jlo.talendcomp.camunda.externaltask.FetchAndLock) globalMap.get("<%=fetchAndLock%>"));
+		<%=cid%>.initLogger("<%=cid%>");
+		<%=cid%>.setDebug(<%=debug%>);
+		<%=cid%>.setCheckLockExpiration(<%=checkLockExpirationTime%>);
+		<%=cid%>.setSuppressExpiredTasks(<%=suppressExpiredTasks%>);
 		globalMap.put("<%=cid%>", <%=cid%>);
 	}
-	<%=cid%>.setDebug(<%=debug%>);
-	<%=cid%>.setCheckLockExpiration(<%=checkLockExpirationTime%>);
-	<%=cid%>.setSuppressExpiredTasks(<%=suppressExpiredTasks%>);
 	try {
 <%	for (int i = 0; i < listColumns.size(); i++) {
 		IMetadataColumn mc = listColumns.get(i);
+		Map<String, String> config = configList.get(i);
+		String fieldLabel = config.get("ATTRIBUTE_ALIAS");
+		if (fieldLabel == null || fieldLabel.trim().isEmpty()) {
+			fieldLabel = "\"" + mc.getLabel()  + "\"";
+		}
 		String pattern = mc.getPattern();
 		if (pattern == null || pattern.trim().isEmpty()) {
 			pattern = "null";
 		} %>
 <% 	if (conn != null && valuesFromFlow) { %>
-		<%=cid%>.addVariable("<%=mc.getLabel()%>", <%=conn.getName()%>.<%=mc.getLabel()%>, <%=pattern%>);
+		<%=cid%>.addVariable(<%=fieldLabel%>, <%=conn.getName()%>.<%=mc.getLabel()%>, <%=pattern%>);
 <%		} else {
-			Map<String, String> variable = variables.get(i);
-			String value = variable.get("VALUE"); 
+			String value = config.get("VALUE"); 
 			if (value != null && value.trim().isEmpty() == false) { %>
-		<%=cid%>.addVariable("<%=mc.getLabel()%>", <%=value%>, <%=pattern%>);
+		<%=cid%>.addVariable(<%=fieldLabel%>, <%=value%>, <%=pattern%>);
 <%			} %>
 <%		} %>
 <%	} %>

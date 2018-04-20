@@ -29,9 +29,10 @@
 	de.jlo.talendcomp.camunda.externaltask.Response <%=cid%> = (de.jlo.talendcomp.camunda.externaltask.Response) globalMap.get("<%=cid%>");
 	if (<%=cid%> == null) {
 		<%=cid%> = new de.jlo.talendcomp.camunda.externaltask.Response((de.jlo.talendcomp.camunda.externaltask.FetchAndLock) globalMap.get("<%=fetchAndLock%>"));
+		<%=cid%>.initLogger("<%=cid%>");
+		<%=cid%>.setDebug(<%=debug%>);
 		globalMap.put("<%=cid%>", <%=cid%>);
 	}
-	<%=cid%>.setDebug(<%=debug%>);
 	try {
 <%	if (conn != null && valuesFromFlow) { %>
 		<%=cid%>.bpmnError(<%=conn.getName()%>.errorCode);

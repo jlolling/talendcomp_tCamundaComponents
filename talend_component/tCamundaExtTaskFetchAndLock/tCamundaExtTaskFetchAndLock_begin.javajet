@@ -63,6 +63,7 @@
 	 }
 %>
 	de.jlo.talendcomp.camunda.externaltask.FetchAndLock <%=cid%> = new de.jlo.talendcomp.camunda.externaltask.FetchAndLock();
+	<%=cid%>.initLogger("<%=cid%>");
 	<%=cid%>.setDebug(<%=debug%>);
 <% if (useAlternateEndpoint) { %>
 	<%=cid%>.setAlternateEndpoint(<%=alternateEndpoint%>);
@@ -92,8 +93,14 @@
 <%	if (timeout != null && timeout.trim().isEmpty() == false) { %>
 	<%=cid%>.setTimeout(<%=timeout%>);
 <%	} %>
-<%	for (IMetadataColumn col : listColumns) { %>
-	<%=cid%>.addVariable("<%=col.getLabel()%>");
+<%	for (int x = 0; x < listColumns.size(); x++) {
+		IMetadataColumn mc = listColumns.get(x);
+		Map<String, String> config = configList.get(x);
+		String fieldLabel = config.get("ATTRIBUTE_ALIAS");
+		if (fieldLabel == null || fieldLabel.trim().isEmpty()) {
+			 fieldLabel = "\"" + mc.getLabel()  + "\"";
+		} %>
+	<%=cid%>.addVariable(<%=fieldLabel%>);
 <% } %>
 	globalMap.put("<%=cid%>", <%=cid%>);
 	while (true) {
@@ -107,12 +114,15 @@
 			globalMap.put("<%=cid%>_CURRENT_TASK", <%=cid%>.getCurrentTask());
 <%		for (int i = 0; i < listColumns.size(); i++) {
 			IMetadataColumn mc = listColumns.get(i);
-			String fieldLabel = "\"" + mc.getLabel()  + "\"";
+			Map<String, String> config = configList.get(i);
+			String fieldLabel = config.get("ATTRIBUTE_ALIAS");
+			if (fieldLabel == null || fieldLabel.trim().isEmpty()) {
+				 fieldLabel = "\"" + mc.getLabel()  + "\"";
+			}
 			String pattern = mc.getPattern();
 			if (pattern == null || pattern.trim().isEmpty()) {
 				pattern = "null";
 			}
-			Map<String, String> config = configList.get(i);
 			boolean allowMissing = "true".equals(config.get("MISSING_ATTRIBUTE_ALLOWED"));
 			String javaClassName = mc.getTalendType().substring(3);
 			String javaPackageClassName = JavaTypesManager.getTypeToGenerate(mc.getTalendType(), true);

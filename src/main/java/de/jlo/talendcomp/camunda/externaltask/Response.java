@@ -43,7 +43,7 @@ public class Response extends CamundaClient {
 		if (value != null) {
 			ObjectNode varNode = currentVariablesNode.with(varName);
 			//varNode.put("type", value.getClass().getName());
-			varNode.set("valueInfo", objectMapper.createObjectNode());
+			//varNode.set("valueInfo", objectMapper.createObjectNode());
 			if (value instanceof Date) {
 				if (Util.isEmpty(pattern)) {
 					pattern = "yyyy-MM-dd'T'HH:mm:ss";
