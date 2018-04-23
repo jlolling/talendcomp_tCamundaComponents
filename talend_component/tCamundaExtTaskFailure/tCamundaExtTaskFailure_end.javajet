@@ -10,8 +10,8 @@
 	INode node = (INode)codeGenArgument.getArgument();
 	String cid = node.getUniqueName();	
 %>
-	} // close while loop for <%=cid%>
-	<%=cid%>.close();
-	globalMap.put("<%=cid%>_NB_FETCH_REQUESTS", <%=cid%>.getNumberFetches());
-	globalMap.put("<%=cid%>_NB_FETCH_REQUESTS_WITH_TASKS", <%=cid%>.getNumberSucessfulFetches()); 
-	globalMap.put("<%=cid%>_NB_TASKS_TOTAL", <%=cid%>.getNumberTasksReceived());
+	{
+		de.jlo.talendcomp.camunda.externaltask.Response response = (de.jlo.talendcomp.camunda.externaltask.Response) globalMap.get("<%=cid%>");
+		response.close();
+	}
+	

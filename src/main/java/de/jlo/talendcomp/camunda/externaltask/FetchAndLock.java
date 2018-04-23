@@ -59,7 +59,7 @@ public class FetchAndLock extends CamundaClient {
 			if (stopTimeReached()) {
 				break;
 			}
-			HttpClient client = createHttpClient();
+			HttpClient client = getHttpClient();
 			String responseStr = client.post(getExternalTaskEndpointURL() + "/fetchAndLock", camundaUser, camundaPassword, requestPayload, true);
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Response: " + responseStr);

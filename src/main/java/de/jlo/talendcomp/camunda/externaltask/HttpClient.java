@@ -1,5 +1,6 @@
 package de.jlo.talendcomp.camunda.externaltask;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 
@@ -9,7 +10,6 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
@@ -30,23 +30,8 @@ public class HttpClient {
 	private int maxRetriesInCaseOfErrors = 0;
 	private int currentAttempt = 0;
 	private long waitMillisAfterError = 1000l;
-	
-	public String get(String urlStr, String user, String password) throws Exception {
-        CloseableHttpClient httpclient = createClient(urlStr, user, password);
-        try {
-            HttpGet request = new HttpGet(urlStr);
-            CloseableHttpResponse response = httpclient.execute(request);
-            try {
-            	statusCode = response.getStatusLine().getStatusCode();
-            	statusMessage = response.getStatusLine().getReasonPhrase();
-                return EntityUtils.toString(response.getEntity(), "UTF-8");
-            } finally {
-                response.close();
-            }
-        } finally {
-            httpclient.close();
-        }
-	}
+	private boolean cacheClient = false;
+	private CloseableHttpClient cachedHttpClient = null;
 	
 	private HttpEntity buildEntity(JsonNode node) throws UnsupportedEncodingException {
 		if (node != null && node.isNull() == false && node.isMissingNode() == false) {
@@ -58,51 +43,60 @@ public class HttpClient {
 	}
 
 	private String execute(CloseableHttpClient httpclient, HttpPost request, boolean expectResponse) throws Exception {
-		for (currentAttempt = 0; currentAttempt <= maxRetriesInCaseOfErrors; currentAttempt++) {
-			if (Thread.currentThread().isInterrupted()) {
-				break;
+		String responseContent = "";
+		currentAttempt = 0;
+		try {
+			for (currentAttempt = 0; currentAttempt <= maxRetriesInCaseOfErrors; currentAttempt++) {
+				if (Thread.currentThread().isInterrupted()) {
+					break;
+				}
+	            CloseableHttpResponse httpResponse = null;
+	            try {
+	            	if (LOG.isDebugEnabled()) {
+	            		LOG.debug("Execute request: " + request);
+	            	}
+	            	httpResponse = httpclient.execute(request);
+	            	statusCode = httpResponse.getStatusLine().getStatusCode();
+	            	statusMessage = httpResponse.getStatusLine().getReasonPhrase();
+	            	if (expectResponse || (statusCode != 204 && statusCode != 205)) {
+	                	responseContent = EntityUtils.toString(httpResponse.getEntity(), "UTF-8");
+	                	if (Util.isEmpty(responseContent)) {
+	                		throw new Exception("Empty response received.");
+	                	}
+	            	}
+	            	httpResponse.close();
+	            	if (cacheClient == false) {
+		    	    	httpclient.close();
+	            	}
+	            	break;
+	            } catch (Exception e) {
+	            	if (currentAttempt <= maxRetriesInCaseOfErrors) {
+	                	// this can happen, we try it again
+	                	LOG.warn("POST request: " + request.getURI() + " failed (" + (currentAttempt + 1) + ". attempt). Waiting " + waitMillisAfterError + "ms and retry request.", e);
+	                	Thread.sleep(waitMillisAfterError);
+	            	} else {
+	                	LOG.error("POST request: " + request.getURI() + " failed.", e);
+	                	throw new Exception("POST request: " + request.getURI() + " failed.", e);
+	            	}
+	            } finally {
+	            	if (httpResponse != null) {
+	                    httpResponse.close();
+	            	}
+	            }
 			}
-            CloseableHttpResponse response = null;
-            try {
-            	if (LOG.isDebugEnabled()) {
-            		LOG.debug("Execute request: " + request);
-            	}
-            	response = httpclient.execute(request);
-            	statusCode = response.getStatusLine().getStatusCode();
-            	statusMessage = response.getStatusLine().getReasonPhrase();
-            	if (expectResponse || (statusCode != 204 && statusCode != 205)) {
-                	String responseContent = EntityUtils.toString(response.getEntity(), "UTF-8");
-                	if (Util.isEmpty(responseContent)) {
-                		throw new Exception("Empty response received.");
-                	}
-                    return responseContent;
-            	} else {
-            		return "";
-            	}
-            } catch (Exception e) {
-            	if (currentAttempt <= maxRetriesInCaseOfErrors) {
-                	// this can happen, we try it again
-                	LOG.warn("POST request: " + request.getURI() + " failed (" + (currentAttempt + 1) + ". attempt). Waiting " + waitMillisAfterError + "ms and retry request.", e);
-                	Thread.sleep(waitMillisAfterError);
-            	} else {
-                	LOG.error("POST request: " + request.getURI() + " failed.", e);
-                	throw new Exception("POST request: " + request.getURI() + " failed.", e);
-            	}
-            } finally {
-            	if (response != null) {
-                    response.close();
-            	}
-            }
+		} finally {
+        	if (cacheClient == false) {
+    	    	httpclient.close();
+        	}
 		}
-    	httpclient.close();
-		return null;
+        return responseContent;
 	}
 
 	public String post(String urlStr, String user, String password, JsonNode node, boolean expectResponse) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("POST " + urlStr + " body: " + node.toString());
 		}
-        CloseableHttpClient httpclient = createClient(urlStr, user, password); 
+        CloseableHttpClient httpclient = createCloseableClient(urlStr, user, password); 
         HttpPost request = new HttpPost(urlStr);
         request.getConfig();
         if (node != null) {
@@ -113,28 +107,47 @@ public class HttpClient {
         return execute(httpclient, request, expectResponse);
 	}
 
-	private CloseableHttpClient createClient(String urlStr, String user, String password) throws Exception {
+	private CloseableHttpClient createCloseableClient(String urlStr, String user, String password) throws Exception {
         CredentialsProvider credsProvider = new BasicCredentialsProvider();
-        if (user != null && user.trim().isEmpty() == false) {
-    		URL url = new URL(urlStr);
-            credsProvider.setCredentials(
-                    new AuthScope(url.getHost(), url.getPort()),
-                    new UsernamePasswordCredentials(user, password));
-            RequestConfig requestConfig = RequestConfig.custom()
-                    .setSocketTimeout(connectionTimeout)
-                    .setConnectTimeout(connectionTimeout)
-                    .setConnectionRequestTimeout(connectionTimeout)
-                    .setRedirectsEnabled(true)
-                    .setRelativeRedirectsAllowed(true)
-                    .build();
-            CloseableHttpClient client = HttpClients.custom()
-                    .setDefaultCredentialsProvider(credsProvider)
-                    .setDefaultRequestConfig(requestConfig)
-                    .build();
-            return client;
+        if (cachedHttpClient == null) {
+            if (user != null && user.trim().isEmpty() == false) {
+        		URL url = new URL(urlStr);
+                credsProvider.setCredentials(
+                        new AuthScope(url.getHost(), url.getPort()),
+                        new UsernamePasswordCredentials(user, password));
+                RequestConfig requestConfig = RequestConfig.custom()
+                        .setSocketTimeout(connectionTimeout)
+                        .setConnectTimeout(connectionTimeout)
+                        .setConnectionRequestTimeout(connectionTimeout)
+                        .setRedirectsEnabled(true)
+                        .setRelativeRedirectsAllowed(true)
+                        .build();
+                CloseableHttpClient client = HttpClients.custom()
+                        .setDefaultCredentialsProvider(credsProvider)
+                        .setDefaultRequestConfig(requestConfig)
+                        .build();
+                if (cacheClient) {
+                	cachedHttpClient = client;
+                }
+                return client;
+            } else {
+                RequestConfig requestConfig = RequestConfig.custom()
+                        .setSocketTimeout(connectionTimeout)
+                        .setConnectTimeout(connectionTimeout)
+                        .setConnectionRequestTimeout(connectionTimeout)
+                        .setRedirectsEnabled(true)
+                        .setRelativeRedirectsAllowed(true)
+                        .build();
+                CloseableHttpClient client = HttpClients.custom()
+                        .setDefaultRequestConfig(requestConfig)
+                        .build();
+                if (cacheClient) {
+                	cachedHttpClient = client;
+                }
+                return client;
+            }
         } else {
-            return HttpClients.custom()
-                    .build();
+        	return cachedHttpClient;
         }
 	}
 
@@ -206,6 +219,24 @@ public class HttpClient {
 				LOG.setLevel(Level.DEBUG);
 			} else {
 				LOG.setLevel(Level.INFO);
+			}
+		}
+	}
+
+	public boolean isCacheClient() {
+		return cacheClient;
+	}
+
+	public void setCacheClient(boolean cacheClient) {
+		this.cacheClient = cacheClient;
+	}
+	
+	public void close() {
+		if (cachedHttpClient != null) {
+			try {
+				cachedHttpClient.close();
+			} catch (IOException e) {
+				// ignore
 			}
 		}
 	}

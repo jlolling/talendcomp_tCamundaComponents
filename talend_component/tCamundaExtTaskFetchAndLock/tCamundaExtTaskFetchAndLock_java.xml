@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <COMPONENT> 
-  <HEADER AUTHOR="Jan Lolling" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="true" HAS_CONDITIONAL_OUTPUTS="false" PLATEFORM="ALL" RELEASE_DATE="20180420" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="1.1"> 
+  <HEADER AUTHOR="Jan Lolling" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="true" HAS_CONDITIONAL_OUTPUTS="false" PLATEFORM="ALL" RELEASE_DATE="20180423" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="1.3"> 
     <SIGNATURE/> 
   </HEADER>  
   <FAMILIES> 
@@ -73,6 +73,9 @@
     <PARAMETER NAME="DEBUG" FIELD="CHECK" NUM_ROW="10"> 
       <DEFAULT>false</DEFAULT> 
     </PARAMETER>  
+    <PARAMETER NAME="CACHE_CLIENT" FIELD="CHECK" NUM_ROW="15"> 
+      <DEFAULT>true</DEFAULT> 
+    </PARAMETER>  
     <PARAMETER NAME="TIMEOUT" FIELD="TEXT" NUM_ROW="20"> 
       <DEFAULT>10000</DEFAULT> 
     </PARAMETER>  
@@ -82,13 +85,13 @@
     <PARAMETER NAME="WAIT_TIME_AFTER_ERROR" FIELD="TEXT" NUM_ROW="40"> 
       <DEFAULT>1000</DEFAULT> 
     </PARAMETER>  
-    <PARAMETER NAME="RELEASE_LABEL_20180420" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
-      <DEFAULT>Release: 1.1 build at: 20180420</DEFAULT>
+    <PARAMETER NAME="RELEASE_LABEL_20180423" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
+      <DEFAULT>Release: 1.3 build at: 20180423</DEFAULT>
     </PARAMETER>
   </ADVANCED_PARAMETERS>  
   <CODEGENERATION> 
     <IMPORTS> 
-      <IMPORT NAME="jlo-talendcomp-camunda-externaltask" MODULE="jlo-talendcomp-camunda-externaltask-1.1.jar" REQUIRED="true"/>
+      <IMPORT NAME="jlo-talendcomp-camunda-externaltask" MODULE="jlo-talendcomp-camunda-externaltask-1.3.jar" REQUIRED="true"/>
       <IMPORT NAME="httpclient" MODULE="httpclient-4.3.6.jar" REQUIRED="true"/>
       <IMPORT NAME="httpcore" MODULE="httpcore-4.3.3.jar" REQUIRED="true"/>
       <IMPORT NAME="commons-logging" MODULE="commons-logging-1.1.3.jar" REQUIRED="true"/>

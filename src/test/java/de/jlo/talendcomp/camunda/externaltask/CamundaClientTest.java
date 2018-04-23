@@ -35,6 +35,7 @@ public class CamundaClientTest {
 			System.out.println(cc.getCurrentTaskId());
 			System.out.println(cc.getCurrentTaskVariableValueAsObject("calculateConflict", false, false));
 		}
+		
 		Assert.assertTrue(true);
 
 	}

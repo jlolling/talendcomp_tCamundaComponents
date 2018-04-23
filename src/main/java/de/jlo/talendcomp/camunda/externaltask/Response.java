@@ -31,6 +31,7 @@ public class Response extends CamundaClient {
 		setTimeout(fetchAndLock.getTimeout());
 		setMaxRetriesInCaseOfErrors(fetchAndLock.getMaxRetriesInCaseOfErrors());
 		setWaitMillisAfterError(fetchAndLock.getWaitMillisAfterError());
+		setCacheClient(fetchAndLock.isCacheClient());
 	}
 	
 	public void addVariable(String varName, Object value, String pattern) {
@@ -102,7 +103,7 @@ public class Response extends CamundaClient {
 		requestPayload.put("workerId", workerId);
 		requestPayload.set("variables", currentVariablesNode);
 		currentVariablesNode = null; // set node to null to force creating a new one for the next complete call
-		HttpClient client = createHttpClient();
+		HttpClient client = getHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/complete", camundaUser, camundaPassword, requestPayload, false);
 		if (client.getStatusCode() != 204) {
 			String message = "Complete POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
@@ -123,7 +124,7 @@ public class Response extends CamundaClient {
 		ObjectNode requestPayload = objectMapper.createObjectNode();
 		requestPayload.put("workerId", workerId);
 		requestPayload.put("errorCode", errorCode);
-		HttpClient client = createHttpClient();
+		HttpClient client = getHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/bpmnError", camundaUser, camundaPassword, requestPayload, false);
 		if (client.getStatusCode() != 204) {
 			String message = "BpmnError POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
@@ -155,7 +156,7 @@ public class Response extends CamundaClient {
 		if (retryTimeout != null && retryTimeout.intValue() > 0) {
 			requestPayload.put("retryTimeout", retryTimeout.intValue());
 		}
-		HttpClient client = createHttpClient();
+		HttpClient client = getHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/failure", camundaUser, camundaPassword, requestPayload, false);
 		if (client.getStatusCode() != 204) {
 			String message = "Failure POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
@@ -169,7 +170,7 @@ public class Response extends CamundaClient {
 		if (taskId == null) {
 			throw new IllegalStateException("taskId not provided by the fetchAndLock component");
 		}
-		HttpClient client = createHttpClient();
+		HttpClient client = getHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/unlock", camundaUser, camundaPassword, null, false);
 		if (client.getStatusCode() != 204) {
 			String message = "Unlock POST failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
