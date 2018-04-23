@@ -4,7 +4,7 @@
 
 	<groupId>de.jlo.talendcomp.camunda</groupId>
 	<artifactId>jlo-talendcomp-camunda-externaltask</artifactId>
-	<version>1.3</version>
+	<version>1.4</version>
 	<packaging>jar</packaging>
 
 	<name>jlo-talendcomp-camunda-externaltask</name>
@@ -120,6 +120,16 @@
 						</goals>
 						<configuration>
 							<componentName>tCamundaExtTaskUnlock</componentName>
+							<noJars>true</noJars>
+						</configuration>
+					</execution>
+					<execution>
+						<id>tCamundaExtTaskClose</id>
+						<goals>
+							<goal>component</goal>
+						</goals>
+						<configuration>
+							<componentName>tCamundaExtTaskClose</componentName>
 							<noJars>true</noJars>
 						</configuration>
 					</execution>

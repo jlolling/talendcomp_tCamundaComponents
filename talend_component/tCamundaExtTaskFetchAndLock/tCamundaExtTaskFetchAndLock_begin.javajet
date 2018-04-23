@@ -61,12 +61,10 @@
     		   listColumns = metadata.getListColumns();
 		  }
 	 }
-	 boolean cacheClient = "true".equals(ElementParameterParser.getValue(node, "__CACHE_CLIENT__"));
 %>
 	de.jlo.talendcomp.camunda.externaltask.FetchAndLock <%=cid%> = new de.jlo.talendcomp.camunda.externaltask.FetchAndLock();
 	<%=cid%>.initLogger("<%=cid%>");
 	<%=cid%>.setDebug(<%=debug%>);
-	<%=cid%>.setCacheClient(<%=cacheClient%>);
 <% if (useAlternateEndpoint) { %>
 	<%=cid%>.setAlternateEndpoint(<%=alternateEndpoint%>);
 <% } else { %>
@@ -104,6 +102,7 @@
 		} %>
 	<%=cid%>.addVariable(<%=fieldLabel%>);
 <% } %>
+	globalMap.put("httpClient_<%=cid%>", <%=cid%>.getHttpClient());
 	globalMap.put("<%=cid%>", <%=cid%>);
 	while (true) {
 		try {

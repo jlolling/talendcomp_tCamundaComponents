@@ -10,7 +10,10 @@
 	INode node = (INode)codeGenArgument.getArgument();
 	String cid = node.getUniqueName();	
 %>
+/*
 	{
 		de.jlo.talendcomp.camunda.externaltask.Response response = (de.jlo.talendcomp.camunda.externaltask.Response) globalMap.get("<%=cid%>");
 		response.close();
+		globalMap.remove("<%=cid%>");
 	}
+*/

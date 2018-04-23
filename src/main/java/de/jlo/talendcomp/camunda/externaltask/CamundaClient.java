@@ -25,26 +25,26 @@ public class CamundaClient {
 	protected final static ObjectMapper objectMapper = new ObjectMapper();
 	private Locale defaultLocale = Locale.ENGLISH;
 	private String camundaEngine = "default";
-	private boolean cacheClient = false;
-	private HttpClient chHttpClient = null;
+	private HttpClient cachedHttpClient = null;
 	
 	public void initLogger(String compName) {
 		LOG = Logger.getLogger(this.getClass().getName() + "." + compName);
 	}
 	
-	protected HttpClient getHttpClient() throws Exception {
-		if (chHttpClient != null) {
-			return chHttpClient;
+	public void setHttpClient(HttpClient cachedHttpClient) {
+		this.cachedHttpClient = cachedHttpClient;
+	}
+	
+	public HttpClient getHttpClient() throws Exception {
+		if (cachedHttpClient != null) {
+			return cachedHttpClient;
 		} else {
-			HttpClient httpClient = new HttpClient();
+			HttpClient httpClient = new HttpClient(camundaServiceEndpointURL, camundaUser, camundaPassword);
 			httpClient.setDebug(isDebug());
 			httpClient.setTimeout(timeout);
 			httpClient.setMaxRetriesInCaseOfErrors(maxRetriesInCaseOfErrors);
 			httpClient.setWaitMillisAfterError(waitMillisAfterError);
-			httpClient.setCacheClient(cacheClient);
-			if (cacheClient) {
-				chHttpClient = httpClient;
-			}
+			cachedHttpClient = httpClient;
 			return httpClient;
 		}
 	}
@@ -207,18 +207,10 @@ public class CamundaClient {
 		}
 	}
 
-	public boolean isCacheClient() {
-		return cacheClient;
-	}
-
-	public void setCacheClient(boolean cacheClient) {
-		this.cacheClient = cacheClient;
-	}
-
 	public void close() {
-		if (chHttpClient != null) {
-			chHttpClient.close();
+		if (cachedHttpClient != null) {
+			cachedHttpClient.close();
 		}
 	}
-	
+
 }

@@ -30,12 +30,11 @@ public class CamundaClientTest {
 		cc.setTopicName("calculateConflict");
 		cc.addVariable("calculateConflict");
 		cc.setLockDuration(1000);
-		cc.setStopTime(1);
+		cc.setStopTime(60);
 		while (cc.next()) {
 			System.out.println(cc.getCurrentTaskId());
 			System.out.println(cc.getCurrentTaskVariableValueAsObject("calculateConflict", false, false));
 		}
-		
 		Assert.assertTrue(true);
 
 	}

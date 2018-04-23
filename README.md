@@ -9,3 +9,5 @@ This component sends a BPMN Error response to the Camunda engine
 This component sends a technical failure response to the Camunda engine
 ## tCamundaExtTaskUnlock
 This component sends a unlock response to the Camunda engine
+## tCamundaExtTaskClose
+This component close the connection to the Camunda engine
