@@ -25,6 +25,11 @@ public class FetchAndLock extends CamundaClient {
 	private long numberFetches = 0;
 	private int numberSucessfulFetches = 0;
 	private int numberTasksReceived = 0;
+	private boolean firstFetch = true;
+	
+	public FetchAndLock() {
+		startTime = System.currentTimeMillis();
+	}
 	
 	private ArrayNode getVariableNames() {
 		if (requestedVariables.isEmpty()) {
@@ -58,6 +63,14 @@ public class FetchAndLock extends CamundaClient {
 		while (true) {
 			if (stopTimeReached()) {
 				break;
+			}
+			if (firstFetch == false) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Wait " + secondsBetweenFetches + "s");
+				}
+				Thread.sleep(secondsBetweenFetches * 1000l);
+			} else {
+				firstFetch = false;
 			}
 			HttpClient client = getHttpClient();
 			String responseStr = client.post(getExternalTaskEndpointURL() + "/fetchAndLock", requestPayload, true);
@@ -112,17 +125,7 @@ public class FetchAndLock extends CamundaClient {
 		if (Thread.currentThread().isInterrupted()) {
 			return false;
 		}
-		if (stopTimeReached()) {
-			return false;
-		}
-		if (fetchedTaskArray == null) {
-			startTime = System.currentTimeMillis();
-			LOG.debug("Fetch and lock intial tasks");
-			fetchAndLock();
-		}
-		if (currentTaskIndex == fetchedTaskArray.size()) {
-			LOG.debug("Fetch and lock for the next tasks. Wait " + secondsBetweenFetches + "s before.");
-			Thread.sleep(secondsBetweenFetches * 1000l);
+		if (fetchedTaskArray == null || currentTaskIndex == fetchedTaskArray.size()) {
 			fetchAndLock();
 		}
 		if (fetchedTaskArray != null) {
