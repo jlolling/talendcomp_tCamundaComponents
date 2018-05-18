@@ -1,4 +1,4 @@
-package de.jlo.talendcomp.camunda.externaltask;
+package de.jlo.talendcomp.camunda;
 
 import java.text.ParseException;
 import java.util.Date;
@@ -12,8 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class CamundaClient {
 	
 	protected Logger LOG = Logger.getLogger(CamundaClient.class.getClass().getName());
-	protected String topicName = null;
-	protected String workerId = null;
 	private String camundaServiceEndpointURL = null;
 	private String alternativeEndpoint = null;
 	private boolean needAuthorization = true;
@@ -49,21 +47,6 @@ public class CamundaClient {
 		}
 	}
 
-	public void setTopicName(String topicName) {
-		if (Util.isEmpty(topicName)) {
-			throw new IllegalArgumentException("Topic name cannot be null or empty");
-		}
-		this.topicName = topicName;
-	}
-
-	public String getWorkerId() {
-		return workerId;
-	}
-
-	public void setWorkerId(String workerId) {
-		this.workerId = workerId;
-	}
-
 	public String getCamundaServiceURL() {
 		return camundaServiceEndpointURL;
 	}
@@ -92,6 +75,16 @@ public class CamundaClient {
 
 	public void setCamundaPassword(String camundaPassword) {
 		this.camundaPassword = camundaPassword;
+	}
+	
+	protected String getProcessDefinitionEndPoint() {
+		if (alternativeEndpoint != null) {
+			return alternativeEndpoint;
+		} else if (camundaServiceEndpointURL != null) {
+			return camundaServiceEndpointURL + "/engine-rest/engine/" + camundaEngine + "/process-definition/key/";
+		} else {
+			throw new IllegalStateException("Neither camundaServiceEndpointURL or alternativeEndpoint is set.");
+		}
 	}
 
 	protected String getExternalTaskEndpointURL() {
@@ -126,10 +119,6 @@ public class CamundaClient {
 		if (localeStr != null && localeStr.trim().isEmpty() == false) {
 			this.defaultLocale = Util.createLocale(localeStr);
 		}
-	}
-	
-	public String getTopicName() {
-		return topicName;
 	}
 	
 	protected Date parseDate(String value, String pattern) throws ParseException {

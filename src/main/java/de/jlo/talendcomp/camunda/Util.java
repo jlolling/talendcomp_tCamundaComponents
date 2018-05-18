@@ -1,4 +1,4 @@
-package de.jlo.talendcomp.camunda.externaltask;
+package de.jlo.talendcomp.camunda;
 
 import java.util.Collection;
 import java.util.Locale;

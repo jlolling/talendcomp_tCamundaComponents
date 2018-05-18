@@ -8,6 +8,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jayway.jsonpath.internal.Utils;
 
+import de.jlo.talendcomp.camunda.CamundaClient;
+import de.jlo.talendcomp.camunda.HttpClient;
+import de.jlo.talendcomp.camunda.Util;
+
 public class Response extends CamundaClient {
 
 	private String taskId = null;
@@ -75,7 +79,7 @@ public class Response extends CamundaClient {
 	
 	public void complete() throws Exception {
 		currentTaskExpired = false;
-		workerId = fetchAndLock.getWorkerId();
+		String workerId = fetchAndLock.getWorkerId();
 		if (workerId == null) {
 			throw new IllegalStateException("workerId not provided by the fetchAndLock component");
 		}
@@ -108,7 +112,7 @@ public class Response extends CamundaClient {
 	}
 	
 	public void bpmnError(String errorCode) throws Exception {
-		workerId = fetchAndLock.getWorkerId();
+		String workerId = fetchAndLock.getWorkerId();
 		if (workerId == null) {
 			throw new IllegalStateException("workerId not provided by the fetchAndLock component");
 		}
@@ -129,7 +133,7 @@ public class Response extends CamundaClient {
 	}
 
 	public void failure(String errorMessage, String errorDetails, Integer retries, Number retryTimeout) throws Exception {
-		workerId = fetchAndLock.getWorkerId();
+		String workerId = fetchAndLock.getWorkerId();
 		if (workerId == null) {
 			throw new IllegalStateException("workerId not provided by the fetchAndLock component");
 		}

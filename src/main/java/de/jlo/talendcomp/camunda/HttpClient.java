@@ -1,4 +1,4 @@
-package de.jlo.talendcomp.camunda.externaltask;
+package de.jlo.talendcomp.camunda;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;

@@ -11,6 +11,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import de.jlo.talendcomp.camunda.CamundaClient;
+import de.jlo.talendcomp.camunda.HttpClient;
+import de.jlo.talendcomp.camunda.TypeUtil;
+import de.jlo.talendcomp.camunda.Util;
+
 public class FetchAndLock extends CamundaClient {
 	
 	private List<String> requestedVariables = new ArrayList<String>();
@@ -26,6 +31,8 @@ public class FetchAndLock extends CamundaClient {
 	private int numberSucessfulFetches = 0;
 	private int numberTasksReceived = 0;
 	private boolean firstFetch = true;
+	protected String workerId = null;
+	protected String topicName = null;
 	
 	public FetchAndLock() {
 		startTime = System.currentTimeMillis();
@@ -413,4 +420,23 @@ public class FetchAndLock extends CamundaClient {
 		return numberTasksReceived;
 	}
 
+	public String getWorkerId() {
+		return workerId;
+	}
+
+	public void setWorkerId(String workerId) {
+		this.workerId = workerId;
+	}
+
+	public void setTopicName(String topicName) {
+		if (Util.isEmpty(topicName)) {
+			throw new IllegalArgumentException("Topic name cannot be null or empty");
+		}
+		this.topicName = topicName;
+	}
+
+	public String getTopicName() {
+		return topicName;
+	}
+	
 }

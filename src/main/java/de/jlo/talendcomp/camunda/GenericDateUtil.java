@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.jlo.talendcomp.camunda.externaltask;
+package de.jlo.talendcomp.camunda;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
