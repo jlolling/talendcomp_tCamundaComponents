@@ -40,6 +40,7 @@
     if (maxTasks == null || maxTasks.trim().isEmpty()) {
     	  maxTasks = "null";
     }
+    boolean usePriority = "true".equals(ElementParameterParser.getValue(node, "__USE_PRIORITY__"));
     String workerId = ElementParameterParser.getValue(node, "__WORKER_ID__");
     String lockDuration = ElementParameterParser.getValue(node, "__LOCK_DURATION__");
     String stopTime = ElementParameterParser.getValue(node, "__STOP_TIME__");
@@ -77,6 +78,7 @@
 	<%=cid%>.setCamundaPassword(<%=password%>);
 <%	} %>
 	<%=cid%>.setTopicName(<%=topicName%>);
+	<%=cid%>.setUsePriority(<%=usePriority%>);
 	<%=cid%>.setWorkerId(<%=workerId%>);
 	<%=cid%>.setNumberTaskToFetch(<%=maxTasks%>);
 	<%=cid%>.setLockDuration(<%=lockDuration%>);

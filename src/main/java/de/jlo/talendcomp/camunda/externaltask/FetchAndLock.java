@@ -33,6 +33,7 @@ public class FetchAndLock extends CamundaClient {
 	private boolean firstFetch = true;
 	protected String workerId = null;
 	protected String topicName = null;
+	private boolean usePriority = false;
 	
 	public FetchAndLock() {
 		startTime = System.currentTimeMillis();
@@ -59,6 +60,7 @@ public class FetchAndLock extends CamundaClient {
 		ObjectNode requestPayload = objectMapper.createObjectNode();
 		requestPayload.put("workerId", workerId);
 		requestPayload.put("maxTasks", numberTaskToFetch);
+		requestPayload.put("usePriority", usePriority);
 		requestPayload
 			.withArray("topics")
 				.addObject()
@@ -437,6 +439,16 @@ public class FetchAndLock extends CamundaClient {
 
 	public String getTopicName() {
 		return topicName;
+	}
+
+	public boolean isUsePriority() {
+		return usePriority;
+	}
+
+	public void setUsePriority(Boolean usePriority) {
+		if (usePriority != null) {
+			this.usePriority = usePriority.booleanValue();
+		}
 	}
 	
 }
