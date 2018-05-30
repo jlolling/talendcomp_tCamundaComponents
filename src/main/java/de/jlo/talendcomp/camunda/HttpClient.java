@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class HttpClient {
 	
 	private static Logger LOG = Logger.getLogger(HttpClient.class);
-	private int connectionTimeout = 1000;
 	private int statusCode = 0;
 	private String statusMessage = null;
 	private int maxRetriesInCaseOfErrors = 0;
@@ -32,8 +31,8 @@ public class HttpClient {
 	private long waitMillisAfterError = 1000l;
 	private CloseableHttpClient closableHttpClient = null;
 	
-	public HttpClient(String urlStr, String user, String password) throws Exception {
-		closableHttpClient = createCloseableClient(urlStr, user, password);
+	public HttpClient(String urlStr, String user, String password, int timeout) throws Exception {
+		closableHttpClient = createCloseableClient(urlStr, user, password, timeout);
 	}
 	
 	private HttpEntity buildEntity(JsonNode node) throws UnsupportedEncodingException {
@@ -102,7 +101,7 @@ public class HttpClient {
         return execute(request, expectResponse);
 	}
 
-	private CloseableHttpClient createCloseableClient(String urlStr, String user, String password) throws Exception {
+	private CloseableHttpClient createCloseableClient(String urlStr, String user, String password, int timeout) throws Exception {
         CredentialsProvider credsProvider = new BasicCredentialsProvider();
         if (closableHttpClient == null) {
             if (user != null && user.trim().isEmpty() == false) {
@@ -111,9 +110,9 @@ public class HttpClient {
                         new AuthScope(url.getHost(), url.getPort()),
                         new UsernamePasswordCredentials(user, password));
                 RequestConfig requestConfig = RequestConfig.custom()
-                        .setSocketTimeout(connectionTimeout)
-                        .setConnectTimeout(connectionTimeout)
-                        .setConnectionRequestTimeout(connectionTimeout)
+                        .setSocketTimeout(timeout)
+                        .setConnectTimeout(timeout)
+                        .setConnectionRequestTimeout(timeout)
                         .setRedirectsEnabled(true)
                         .setRelativeRedirectsAllowed(true)
                         .build();
@@ -125,9 +124,9 @@ public class HttpClient {
                 return client;
             } else {
                 RequestConfig requestConfig = RequestConfig.custom()
-                        .setSocketTimeout(connectionTimeout)
-                        .setConnectTimeout(connectionTimeout)
-                        .setConnectionRequestTimeout(connectionTimeout)
+                        .setSocketTimeout(timeout)
+                        .setConnectTimeout(timeout)
+                        .setConnectionRequestTimeout(timeout)
                         .setRedirectsEnabled(true)
                         .setRelativeRedirectsAllowed(true)
                         .build();
@@ -142,38 +141,12 @@ public class HttpClient {
         }
 	}
 
-	public int getTimeout() {
-		return connectionTimeout;
-	}
-
-	public void setTimeout(Integer timeout) {
-		if (timeout != null) {
-			this.connectionTimeout = timeout;
-		}
-	}
-
-	public void setTimeoutInSec(Integer timeout) {
-		if (timeout != null) {
-			this.connectionTimeout = (timeout * 1000);
-		}
-	}
-
 	public int getStatusCode() {
 		return statusCode;
 	}
 
 	public String getStatusMessage() {
 		return statusMessage;
-	}
-
-	public int getConnectionTimeout() {
-		return connectionTimeout;
-	}
-
-	public void setConnectionTimeout(Integer connectionTimeout) {
-		if (connectionTimeout != null) {
-			this.connectionTimeout = connectionTimeout;
-		}
 	}
 
 	public int getMaxRetriesInCaseOfErrors() {
