@@ -92,11 +92,15 @@
 <%	for (int i = 0; i < listColumns.size(); i++) {
 		IMetadataColumn mc = listColumns.get(i);
 		Map<String, String> variable = variables.get(i);
+		boolean onlyInResponse = "true".equals(variable.get("ONLY_IN_RESPONSE"));
+		if (onlyInResponse) {
+			continue;
+		}
 		String fieldLabel = variable.get("ATTRIBUTE_ALIAS");
 		if (fieldLabel == null || fieldLabel.trim().isEmpty()) {
 			fieldLabel = "\"" + mc.getLabel()  + "\"";
 		}
-		String value = variable.get("ATTRIBUTE_VALUE"); 
+		String value = variable.get("ATTRIBUTE_VALUE");
 		if (value != null && value.trim().isEmpty() == false) { %>
 		<%=cid%>.addStartVariable(<%=fieldLabel%>, <%=value%>);
 <%		} %>
@@ -110,40 +114,47 @@
 		<%=cid%>.close();
 	}
 	// process response
-	if (<%=variablesInReturn%>) {
+	if (true) {
 		try {
-<%		for (int i = 0; i < listColumns.size(); i++) {
-			IMetadataColumn mc = listColumns.get(i);
-			Map<String, String> config = variables.get(i);
-			String fieldLabel = config.get("ATTRIBUTE_ALIAS");
-			if (fieldLabel == null || fieldLabel.trim().isEmpty()) {
-				 fieldLabel = "\"" + mc.getLabel()  + "\"";
-			}
-			String pattern = mc.getPattern();
-			if (pattern == null || pattern.trim().isEmpty()) {
-				pattern = "null";
-			}
-			String javaClassName = mc.getTalendType().substring(3);
-			String javaPackageClassName = JavaTypesManager.getTypeToGenerate(mc.getTalendType(), true);
-			boolean isDateValue = javaClassName.contains("Date"); %>
+			globalMap.put("<%=cid%>_PROCESS_DEFINITION_KEY", <%=cid%>.getProcessDefinitionKey());
+			globalMap.put("<%=cid%>_PROCESS_INSTANCE_ID", <%=cid%>.getProcessInstanceId());
+			globalMap.put("<%=cid%>_PROCESS_INSTANCE_ENDED", <%=cid%>.getProcessInstanceEnded());
+			globalMap.put("<%=cid%>_PROCESS_INSTANCE_SUSPENDED", <%=cid%>.getProcessInstanceSuspended());
+			globalMap.put("<%=cid%>_BUSINESS_KEY", <%=cid%>.getBusinessKey());
+<%	for (int i = 0; i < listColumns.size(); i++) {
+		IMetadataColumn mc = listColumns.get(i);
+		Map<String, String> config = variables.get(i);
+		boolean onlyInResponse = "true".equals(config.get("ONLY_IN_RESPONSE"));
+		String fieldLabel = config.get("ATTRIBUTE_ALIAS");
+		if (fieldLabel == null || fieldLabel.trim().isEmpty()) {
+			 fieldLabel = "\"" + mc.getLabel()  + "\"";
+		}
+		String pattern = mc.getPattern();
+		if (pattern == null || pattern.trim().isEmpty()) {
+			pattern = "null";
+		}
+		boolean isNullable = mc.isNullable();
+		String javaClassName = mc.getTalendType().substring(3);
+		String javaPackageClassName = JavaTypesManager.getTypeToGenerate(mc.getTalendType(), true);
+		boolean isDateValue = javaClassName.contains("Date"); %>
 			{
-<%			if (isDateValue) { %>
-				<%=javaPackageClassName%> var = <%=cid%>.getCurrentResponseVariableValueAsDate(<%=fieldLabel%>, <%=pattern%>, <%=mc.isNullable()%>);
-<%			} else { %>
+<%		if (isDateValue) { %>
+				<%=javaPackageClassName%> var = <%=cid%>.getCurrentResponseVariableValueAsDate(<%=fieldLabel%>, <%=pattern%>, <%=isNullable%>);
+<%		} else { %>
 				<%=javaPackageClassName%> var = <%=cid%>.getCurrentResponseVariableValueAs<%=javaClassName%>(<%=fieldLabel%>, <%=mc.isNullable()%>);
-<%			} %>
+<%		} %>
 				globalMap.put("<%=cid%>.<%=mc.getLabel()%>", var);
-<% 		if (conn != null) { %>
+<% 	if (conn != null) { %>
 				<%=conn.getName()%>.<%=mc.getLabel()%> = var;
-<%			} %>
+<%		} %>
 			}
-<%		} %> 
+<%	} %> 
 			Integer count_<%=cid%> = (Integer) globalMap.get("<%=cid%>_NB_LINE");
 			if (count_<%=cid%> == null) {
 				count_<%=cid%> = 0;
 			}
 			count_<%=cid%> = count_<%=cid%> + 1;
-			globalMap.put("<%=cid%>_NB_LINE", count_<%=cid%>);	
+			globalMap.put("<%=cid%>_NB_LINE", count_<%=cid%>);
 		} catch (Exception ex) {
 			globalMap.put("<%=cid%>_ERROR_MESSAGE", ex.getMessage());
 			throw ex;

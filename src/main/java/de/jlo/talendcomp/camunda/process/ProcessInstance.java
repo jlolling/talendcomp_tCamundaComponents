@@ -75,9 +75,7 @@ public class ProcessInstance extends CamundaClient {
 		if (Util.isEmpty(varName)) {
 			throw new IllegalArgumentException("Variable name cannot be null or empty");
 		}
-		if (currentResponseNode == null || currentResponseNode.isNull()) {
-			throw new IllegalStateException("No response available");
-		}
+		checkResponseAvailable();
 		JsonNode varNode = currentResponseNode.get("variables");
 		if (varNode instanceof ObjectNode) {
 			JsonNode valueNode = varNode.path(varName).path("value");
@@ -267,6 +265,62 @@ public class ProcessInstance extends CamundaClient {
 			throw e;
 		}
 	}
+	
+	private void checkResponseAvailable() throws Exception {
+		if (currentResponseNode == null || currentResponseNode.isNull()) {
+			throw new IllegalStateException("No response available");
+		}
+	}
+	
+	public String getProcessInstanceId() throws Exception {
+		checkResponseAvailable();
+		JsonNode node = currentResponseNode.get("id");
+		if (node != null) {
+			return node.asText();
+		} else {
+			return null;
+		}
+	}
+
+	public String getBusinessKey() throws Exception {
+		checkResponseAvailable();
+		JsonNode node = currentResponseNode.get("businessKey");
+		if (node != null) {
+			return node.asText();
+		} else {
+			return null;
+		}
+	}
+
+	public Boolean getProcessInstanceEnded() throws Exception {
+		checkResponseAvailable();
+		JsonNode node = currentResponseNode.get("ended");
+		if (node != null) {
+			return node.asBoolean();
+		} else {
+			return null;
+		}
+	}
+
+	public Boolean getProcessInstanceSuspended() throws Exception {
+		checkResponseAvailable();
+		JsonNode node = currentResponseNode.get("suspended");
+		if (node != null) {
+			return node.asBoolean();
+		} else {
+			return null;
+		}
+	}
+
+	public String getProcessInstanceLinks() throws Exception {
+		checkResponseAvailable();
+		JsonNode node = currentResponseNode.get("links");
+		if (node != null) {
+			return node.toString();
+		} else {
+			return null;
+		}
+	}
 
 	public String getProcessDefinitionKey() {
 		return processDefinitionKey;
@@ -287,10 +341,6 @@ public class ProcessInstance extends CamundaClient {
 		if (withVariablesInReturn != null) {
 			this.withVariablesInReturn = withVariablesInReturn;
 		}
-	}
-
-	public String getBusinessKey() {
-		return businessKey;
 	}
 
 	public void setBusinessKey(String currentBusinessKey) {
