@@ -20,6 +20,7 @@ public class Response extends CamundaClient {
 	private boolean checkLockExpiration = true;
 	private boolean suppressExpiredTasks = false;
 	private boolean currentTaskExpired = false;
+	private long currentTaskDuration = 0;
 	
 	public Response(FetchAndLock fetchAndLock) throws Exception {
 		if (fetchAndLock == null) {
@@ -77,6 +78,13 @@ public class Response extends CamundaClient {
 		}
 	}
 	
+	public void measureTaskDuration() {
+		currentTaskDuration = 0;
+		if (fetchAndLock.getCurrentTaskStartTime() > 0) {
+			currentTaskDuration = System.currentTimeMillis() - fetchAndLock.getCurrentTaskStartTime();
+		}
+	}
+	
 	public void complete() throws Exception {
 		currentTaskExpired = false;
 		String workerId = fetchAndLock.getWorkerId();
@@ -104,6 +112,7 @@ public class Response extends CamundaClient {
 		currentVariablesNode = null; // set node to null to force creating a new one for the next complete call
 		HttpClient client = getHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/complete", requestPayload, false);
+		measureTaskDuration();
 		if (client.getStatusCode() != 204) {
 			String message = "Complete POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
 			LOG.error(message);
@@ -125,6 +134,7 @@ public class Response extends CamundaClient {
 		requestPayload.put("errorCode", errorCode);
 		HttpClient client = getHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/bpmnError", requestPayload, false);
+		measureTaskDuration();
 		if (client.getStatusCode() != 204) {
 			String message = "BpmnError POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
 			LOG.error(message);
@@ -157,6 +167,7 @@ public class Response extends CamundaClient {
 		}
 		HttpClient client = getHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/failure", requestPayload, false);
+		measureTaskDuration();
 		if (client.getStatusCode() != 204) {
 			String message = "Failure POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
 			LOG.error(message);
@@ -171,6 +182,7 @@ public class Response extends CamundaClient {
 		}
 		HttpClient client = getHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/unlock", null, false);
+		measureTaskDuration();
 		if (client.getStatusCode() != 204) {
 			String message = "Unlock POST failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
 			LOG.error(message);
@@ -211,6 +223,14 @@ public class Response extends CamundaClient {
 
 	public boolean isCurrentTaskExpired() {
 		return currentTaskExpired;
+	}
+
+	public long getCurrentTaskDuration() {
+		return currentTaskDuration;
+	}
+
+	public void setCheckLockExpiration(boolean checkLockExpiration) {
+		this.checkLockExpiration = checkLockExpiration;
 	}
 
 }

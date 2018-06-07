@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <COMPONENT> 
-  <HEADER AUTHOR="Jan Lolling" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="true" HAS_CONDITIONAL_OUTPUTS="false" PLATEFORM="ALL" RELEASE_DATE="20180530" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="2.2"> 
+  <HEADER AUTHOR="Jan Lolling" COMPATIBILITY="ALL" DATA_AUTO_PROPAGATE="true" HAS_CONDITIONAL_OUTPUTS="false" PLATEFORM="ALL" RELEASE_DATE="20180607" SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="2.4"> 
     <SIGNATURE/> 
   </HEADER>  
   <FAMILIES> 
@@ -24,7 +24,7 @@
       <DEFAULT>false</DEFAULT> 
     </PARAMETER>  
     <PARAMETER NAME="ALTERNATE_ENDPOINT" FIELD="TEXT" GROUP="CAMUNDA" REQUIRED="true" NUM_ROW="10" SHOW_IF="USE_ALTERNATE_ENDPOINT == 'true'"> 
-      <DEFAULT>"http://localhost:8080/engine-rest/engine/default/external-task"</DEFAULT> 
+      <DEFAULT>"http://localhost:8080/rest/engine/default/external-task"</DEFAULT> 
     </PARAMETER>  
     <PARAMETER NAME="CAMUNDA_SERVICE" FIELD="TEXT" GROUP="CAMUNDA" REQUIRED="true" NUM_ROW="10" SHOW_IF="USE_ALTERNATE_ENDPOINT == 'false'"> 
       <DEFAULT>"http://localhost:8080"</DEFAULT> 
@@ -85,13 +85,13 @@
     <PARAMETER NAME="WAIT_TIME_AFTER_ERROR" FIELD="TEXT" NUM_ROW="40"> 
       <DEFAULT>1000</DEFAULT> 
     </PARAMETER>  
-    <PARAMETER NAME="RELEASE_LABEL_20180530" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
-      <DEFAULT>Release: 2.2 build at: 20180530</DEFAULT>
+    <PARAMETER NAME="RELEASE_LABEL_20180607" FIELD="LABEL" COLOR="0;0;0" NUM_ROW="900">
+      <DEFAULT>Release: 2.4 build at: 20180607</DEFAULT>
     </PARAMETER>
   </ADVANCED_PARAMETERS>  
   <CODEGENERATION> 
     <IMPORTS> 
-      <IMPORT NAME="jlo-talendcomp-camunda" MODULE="jlo-talendcomp-camunda-2.2.jar" REQUIRED="true"/>
+      <IMPORT NAME="jlo-talendcomp-camunda" MODULE="jlo-talendcomp-camunda-2.4.jar" REQUIRED="true"/>
       <IMPORT NAME="httpclient" MODULE="httpclient-4.3.6.jar" REQUIRED="true"/>
       <IMPORT NAME="httpcore" MODULE="httpcore-4.3.3.jar" REQUIRED="true"/>
       <IMPORT NAME="commons-logging" MODULE="commons-logging-1.1.3.jar" REQUIRED="true"/>
@@ -111,6 +111,7 @@
     <RETURN AVAILABILITY="FLOW" NAME="CURRENT_PROCESS_ID" TYPE="id_String"/>  
     <RETURN AVAILABILITY="AFTER" NAME="NB_FETCH_REQUESTS" TYPE="id_Long"/>  
     <RETURN AVAILABILITY="AFTER" NAME="NB_FETCH_REQUESTS_WITH_TASKS" TYPE="id_Integer"/>  
+    <RETURN AVAILABILITY="FLOW" NAME="NB_TASKS_CURRENTLY_FETCHED" TYPE="id_Integer"/>  
     <RETURN AVAILABILITY="AFTER" NAME="NB_TASKS_TOTAL" TYPE="id_Integer"/> 
   </RETURNS>
 </COMPONENT>

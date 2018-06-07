@@ -26,6 +26,7 @@ public class FetchAndLock extends CamundaClient {
 	private int secondsBetweenFetches = 1;
 	private long startTime = 0;
 	private long stopTime = 0;
+	private long currentTaskStartTime = 0;
 	protected long lockDuration = 1000l;
 	private long numberFetches = 0;
 	private int numberSucessfulFetches = 0;
@@ -122,7 +123,7 @@ public class FetchAndLock extends CamundaClient {
 			// check the runtime but take care we are trying fetch at at least one time
 			long currentTime = System.currentTimeMillis();
 			if (currentTime >= stopTime) {
-				LOG.info("Stop fetching task because max runtime is reached.");
+				LOG.info("Stop fetching tasks because max runtime is reached.");
 				return true;
 			}
 		}
@@ -130,6 +131,7 @@ public class FetchAndLock extends CamundaClient {
 	}
 
 	public boolean next() throws Exception {
+		currentTaskStartTime = 0;
 		currentTask = null;
 		if (Thread.currentThread().isInterrupted()) {
 			return false;
@@ -143,10 +145,19 @@ public class FetchAndLock extends CamundaClient {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("Current task: " + currentTask);
 				}
+				currentTaskStartTime = System.currentTimeMillis();
 				return true;
 			}
 		}
 		return false;
+	}
+	
+	public int getCountTasksCurrentlyFetched() {
+		if (fetchedTaskArray != null) {
+			return fetchedTaskArray.size();
+		} else {
+			return 0;
+		}
 	}
 	
 	public String getCurrentTaskId() {
@@ -449,6 +460,10 @@ public class FetchAndLock extends CamundaClient {
 		if (usePriority != null) {
 			this.usePriority = usePriority.booleanValue();
 		}
+	}
+
+	public long getCurrentTaskStartTime() {
+		return currentTaskStartTime;
 	}
 	
 }
