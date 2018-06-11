@@ -123,7 +123,7 @@ public class FetchAndLock extends CamundaClient {
 			// check the runtime but take care we are trying fetch at at least one time
 			long currentTime = System.currentTimeMillis();
 			if (currentTime >= stopTime) {
-				LOG.info("Stop fetching tasks because max runtime is reached.");
+				LOG.info("Worker: " + workerId + ": Stop fetching tasks because max runtime is reached.");
 				return true;
 			}
 		}
@@ -152,12 +152,32 @@ public class FetchAndLock extends CamundaClient {
 		return false;
 	}
 	
+	/**
+	 * Index of the current task received with the last fetch
+	 * @return 1-based index
+	 */
+	public int getCurrentTaskIndexCurrentlyFetched() {
+		return currentTaskIndex;
+	}
+	
+	/**
+	 * Number of tasks currently fetched
+	 * @return number - will be reseted in every fetch
+	 */
 	public int getCountTasksCurrentlyFetched() {
 		if (fetchedTaskArray != null) {
 			return fetchedTaskArray.size();
 		} else {
 			return 0;
 		}
+	}
+	
+	/**
+	 * Indicates the current task is the last one received by the last fetch
+	 * @return true if task is the last
+	 */
+	public boolean isLastTaskCurrentlyFetched() {
+		return currentTaskIndex == fetchedTaskArray.size();
 	}
 	
 	public String getCurrentTaskId() {

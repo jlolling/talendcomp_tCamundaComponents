@@ -4,7 +4,7 @@
 
 	<groupId>de.jlo.talendcomp.camunda</groupId>
 	<artifactId>jlo-talendcomp-camunda</artifactId>
-	<version>2.4</version>
+	<version>3.0</version>
 	<packaging>jar</packaging>
 
 	<name>jlo-talendcomp-camunda-externaltask</name>

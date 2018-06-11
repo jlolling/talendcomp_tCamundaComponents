@@ -1,10 +1,7 @@
 package de.jlo.talendcomp.camunda.externaltask;
 
-import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jayway.jsonpath.internal.Utils;
 
@@ -15,6 +12,7 @@ import de.jlo.talendcomp.camunda.Util;
 public class Response extends CamundaClient {
 
 	private String taskId = null;
+	private String taskIdFromInput = null;
 	private ObjectNode currentVariablesNode = null;
 	private FetchAndLock fetchAndLock = null;
 	private boolean checkLockExpiration = true;
@@ -34,48 +32,11 @@ public class Response extends CamundaClient {
 		this.setDebug(fetchAndLock.isDebug());
 	}
 	
-	public void addVariable(String varName, Object value, String pattern) {
+	public void addVariable(String varName, Object value, String pattern, String dataObjectTypName) {
 		if (currentVariablesNode == null) {
 			currentVariablesNode = objectMapper.createObjectNode();
 		}
-		if (Util.isEmpty(varName)) {
-			throw new IllegalArgumentException("varName cannot be null or empty");
-		}
-		if (value != null) {
-			ObjectNode varNode = currentVariablesNode.with(varName);
-			//varNode.put("type", value.getClass().getName());
-			//varNode.set("valueInfo", objectMapper.createObjectNode());
-			if (value instanceof Date) {
-				if (Util.isEmpty(pattern)) {
-					pattern = "yyyy-MM-dd'T'HH:mm:ss";
-				}
-				SimpleDateFormat sdf = new SimpleDateFormat(pattern);
-				String strValue = sdf.format((Date) value);
-				varNode.put("value", strValue);
-			} else if (value instanceof JsonNode) {
-				varNode.set("value", (JsonNode) value);
-			} else if (value instanceof String) {
-				varNode.put("value", (String) value);
-			} else if (value instanceof Short) {
-				varNode.put("value", (Short) value);
-			} else if (value instanceof Integer) {
-				varNode.put("value", (Integer) value);
-			} else if (value instanceof Long) {
-				varNode.put("value", (Long) value);
-			} else if (value instanceof Double) {
-				varNode.put("value", (Double) value);
-			} else if (value instanceof Float) {
-				varNode.put("value", (Float) value);
-			} else if (value instanceof BigDecimal) {
-				varNode.put("value", (BigDecimal) value);
-			} else if (value instanceof Boolean) {
-				varNode.put("value", (Boolean) value);
-			} else if (value instanceof byte[]) {
-				varNode.put("value", (byte[]) value);
-			} else {
-				varNode.put("value", value.toString());
-			}
-		}
+		addVariableNode(currentVariablesNode, varName, value, pattern, dataObjectTypName);
 	}
 	
 	public void measureTaskDuration() {
@@ -85,16 +46,24 @@ public class Response extends CamundaClient {
 		}
 	}
 	
+	private void setupTaskId() {
+		if (Util.isEmpty(taskIdFromInput) == false) {
+			taskId = taskIdFromInput;
+		} else {
+			taskId = fetchAndLock.getCurrentTaskId();
+		}
+		if (taskId == null) {
+			throw new IllegalStateException("taskId not provided by the fetchAndLock component");
+		}
+	}
+	
 	public void complete() throws Exception {
 		currentTaskExpired = false;
 		String workerId = fetchAndLock.getWorkerId();
 		if (workerId == null) {
 			throw new IllegalStateException("workerId not provided by the fetchAndLock component");
 		}
-		taskId = fetchAndLock.getCurrentTaskId();
-		if (taskId == null) {
-			throw new IllegalStateException("taskId not provided by the fetchAndLock component");
-		}
+		setupTaskId();
 		if (checkLockExpiration) {
 			Date taskLockExpirationTime = fetchAndLock.getCurrentTaskLockExpirationTime();
 			if (taskLockExpirationTime != null && new Date().before(taskLockExpirationTime) == false) {
@@ -125,10 +94,7 @@ public class Response extends CamundaClient {
 		if (workerId == null) {
 			throw new IllegalStateException("workerId not provided by the fetchAndLock component");
 		}
-		taskId = fetchAndLock.getCurrentTaskId();
-		if (taskId == null) {
-			throw new IllegalStateException("taskId not provided by the fetchAndLock component");
-		}
+		setupTaskId();
 		ObjectNode requestPayload = objectMapper.createObjectNode();
 		requestPayload.put("workerId", workerId);
 		requestPayload.put("errorCode", errorCode);
@@ -147,10 +113,7 @@ public class Response extends CamundaClient {
 		if (workerId == null) {
 			throw new IllegalStateException("workerId not provided by the fetchAndLock component");
 		}
-		taskId = fetchAndLock.getCurrentTaskId();
-		if (taskId == null) {
-			throw new IllegalStateException("taskId not provided by the fetchAndLock component");
-		}
+		setupTaskId();
 		ObjectNode requestPayload = objectMapper.createObjectNode();
 		requestPayload.put("workerId", workerId);
 		requestPayload.put("errorMessage", errorMessage);
@@ -176,10 +139,7 @@ public class Response extends CamundaClient {
 	}
 	
 	public void unlock() throws Exception {
-		taskId = fetchAndLock.getCurrentTaskId();
-		if (taskId == null) {
-			throw new IllegalStateException("taskId not provided by the fetchAndLock component");
-		}
+		setupTaskId();
 		HttpClient client = getHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/unlock", null, false);
 		measureTaskDuration();
@@ -192,13 +152,6 @@ public class Response extends CamundaClient {
 
 	public String getTaskId() {
 		return taskId;
-	}
-
-	public void setTaskId(String taskId) {
-		if (Util.isEmpty(taskId)) {
-			throw new IllegalArgumentException("taskId cannot be null or empty");
-		}
-		this.taskId = taskId;
 	}
 
 	public boolean isCheckLockExpiration() {
@@ -231,6 +184,17 @@ public class Response extends CamundaClient {
 
 	public void setCheckLockExpiration(boolean checkLockExpiration) {
 		this.checkLockExpiration = checkLockExpiration;
+	}
+
+	public String getTaskIdFromInput() {
+		return taskIdFromInput;
+	}
+
+	public void setTaskIdFromInput(String taskIdFromInput) {
+		if (Util.isEmpty(taskIdFromInput)) {
+			throw new IllegalArgumentException("Task ID from input data cannot be null or empty!");
+		}
+		this.taskIdFromInput = taskIdFromInput;
 	}
 
 }

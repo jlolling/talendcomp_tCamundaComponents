@@ -111,9 +111,11 @@
 			// next calls repeatly fetchAnLock and iterates through the fetched tasks
 			if (<%=cid%>.next() == false) {
 				globalMap.put("<%=cid%>_NB_TASKS_CURRENTLY_FETCHED", <%=cid%>.getCountTasksCurrentlyFetched());
+				globalMap.put("<%=cid%>_IS_LAST_TASKS_CURRENTLY_FETCHED", <%=cid%>.isLastTaskCurrentlyFetched());
 				break;
 			} else {
 				globalMap.put("<%=cid%>_NB_TASKS_CURRENTLY_FETCHED", <%=cid%>.getCountTasksCurrentlyFetched());
+				globalMap.put("<%=cid%>_IS_LAST_TASKS_CURRENTLY_FETCHED", <%=cid%>.isLastTaskCurrentlyFetched());
 			}
 			globalMap.put("<%=cid%>_CURRENT_PROCESS_ID", <%=cid%>.getCurrentTaskProcessInstanceId());
 			globalMap.put("<%=cid%>_CURRENT_TASK_ID", <%=cid%>.getCurrentTaskId());

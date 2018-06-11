@@ -31,7 +31,7 @@
     		   listColumns = metadata.getListColumns();
 		  }
 	 }
-	 List<Map<String, String>> configList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__VARIABLES__");
+	 List<Map<String, String>> variables = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__VARIABLES__");
 	 boolean valuesFromFlow = "true".equals(ElementParameterParser.getValue(node, "__TAKE_VALUE_FROM_FLOW__"));
 	 boolean checkLockExpirationTime = "true".equals(ElementParameterParser.getValue(node, "__CHECK_LOCK_EXPIRATION__"));
 	 boolean suppressExpiredTasks = "true".equals(ElementParameterParser.getValue(node, "__SUPPRESS_EXPIRED_TASK__"));
@@ -49,23 +49,33 @@
 	try {
 <%	for (int i = 0; i < listColumns.size(); i++) {
 		IMetadataColumn mc = listColumns.get(i);
-		Map<String, String> config = configList.get(i);
-		String fieldLabel = config.get("ATTRIBUTE_ALIAS");
+		Map<String, String> variable = variables.get(i);
+		String fieldLabel = variable.get("ATTRIBUTE_ALIAS");
 		if (fieldLabel == null || fieldLabel.trim().isEmpty()) {
 			fieldLabel = "\"" + mc.getLabel()  + "\"";
+		}
+		String objectTypeName = variable.get("OBJECT_TYPE_NAME");
+		if (objectTypeName == null || objectTypeName.trim().isEmpty()) {
+			 objectTypeName = "null";
 		}
 		String pattern = mc.getPattern();
 		if (pattern == null || pattern.trim().isEmpty()) {
 			pattern = "null";
 		} %>
 <% 	if (conn != null && valuesFromFlow) { %>
-		<%=cid%>.addVariable(<%=fieldLabel%>, <%=conn.getName()%>.<%=mc.getLabel()%>, <%=pattern%>);
+		<%=cid%>.addVariable(<%=fieldLabel%>, <%=conn.getName()%>.<%=mc.getLabel()%>, <%=pattern%>, <%=objectTypeName%>);
 <%		} else {
-			String value = config.get("VALUE"); 
+			String value = variable.get("VALUE"); 
 			if (value != null && value.trim().isEmpty() == false) { %>
-		<%=cid%>.addVariable(<%=fieldLabel%>, <%=value%>, <%=pattern%>);
+		<%=cid%>.addVariable(<%=fieldLabel%>, <%=value%>, <%=pattern%>, <%=objectTypeName%>);
 <%			} %>
 <%		} %>
+<%	} %>
+<%
+	boolean useTaskIdFromInput = "true".equals(ElementParameterParser.getValue(node, "__TAKE_TASK_ID_FROM_DATA__"));
+	String taskIdFromInput = ElementParameterParser.getValue(node, "__TASK_ID__");
+	if (useTaskIdFromInput) { %>
+		<%=cid%>.setTaskIdFromInput(<%=taskIdFromInput%>);
 <%	} %>
 		<%=cid%>.complete();
 		globalMap.put("<%=cid%>_CURRENT_TASK_IS_EXPIRED", <%=cid%>.isCurrentTaskExpired());

@@ -1,13 +1,17 @@
 package de.jlo.talendcomp.camunda;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class CamundaClient {
 	
@@ -198,6 +202,87 @@ public class CamundaClient {
 	public void close() {
 		if (cachedHttpClient != null) {
 			cachedHttpClient.close();
+		}
+	}
+	
+	public ObjectNode addVariableNode(ObjectNode requestNode, String varName, Object value, String pattern, String dataObjectTypName) {
+		if (requestNode == null) {
+			throw new IllegalArgumentException("Request node cannot be null");
+		}
+		if (Util.isEmpty(varName)) {
+			throw new IllegalArgumentException("Name of the variable cannot be null or empty. Parent node: " + requestNode.toString());
+		}
+		if (value != null) {
+			ObjectNode varNode = requestNode.with(varName);
+			//varNode.put("type", value.getClass().getName());
+			//varNode.set("valueInfo", objectMapper.createObjectNode());
+			if (value instanceof Date) {
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+				String strValue = sdf.format((Date) value);
+				varNode.put("value", strValue);
+				varNode.put("type", "Date");
+			} else if (value instanceof Short) {
+				varNode.put("value", (Short) value);
+				varNode.put("type", "Short");
+			} else if (value instanceof Integer) {
+				varNode.put("value", (Integer) value);
+				varNode.put("type", "Integer");
+			} else if (value instanceof Long) {
+				varNode.put("value", (Long) value);
+				varNode.put("type", "Long");
+			} else if (value instanceof Double) {
+				varNode.put("value", (Double) value);
+				varNode.put("type", "Double");
+			} else if (value instanceof Float) {
+				varNode.put("value", (Float) value);
+				varNode.put("type", "Float");
+			} else if (value instanceof BigDecimal) {
+				varNode.put("value", (BigDecimal) value);
+				varNode.put("type", "BigDecimal");
+			} else if (value instanceof Boolean) {
+				varNode.put("value", (Boolean) value);
+				varNode.put("type", "Boolean");
+			} else if (value instanceof byte[]) {
+				varNode.put("value", (byte[]) value);
+			} else if (value instanceof String) {
+				varNode.put("value", (String) value);
+				if (Util.isEmpty(dataObjectTypName) == false) {
+					varNode.put("type", "Object");
+					setValueInfo(varNode, dataObjectTypName);
+				} else {
+					varNode.put("type", "String");
+				}
+			} else if (value instanceof JsonNode) {
+				varNode.set("value", (JsonNode) value);
+				varNode.put("type", "Object");
+				setValueInfo(varNode, dataObjectTypName);
+			} else if (value instanceof Object) {
+				varNode.put("value", value.toString());
+				varNode.put("type", "Object");
+				setValueInfo(varNode, dataObjectTypName);
+			} else {
+				varNode.put("value", value.toString());
+			}
+		}
+		return requestNode;
+	}
+	
+	/**
+	 * Setup a valueInfo node for a variable node
+	 * @param variable
+	 * @param dataObjectTypeName
+	 * @param serializationDataFormat
+	 * @return the variable node
+	 */
+	public ObjectNode setValueInfo(ObjectNode variable, String dataObjectTypeName) {
+		if (variable != null && dataObjectTypeName != null) {
+			ObjectNode valueInfoNode = objectMapper.createObjectNode();
+			valueInfoNode.put("objectTypeName", dataObjectTypeName);
+			valueInfoNode.put("serializationDataFormat", "application/json");
+			variable.set("valueInfo", valueInfoNode);
+			return variable;
+		} else {
+			return null;
 		}
 	}
 

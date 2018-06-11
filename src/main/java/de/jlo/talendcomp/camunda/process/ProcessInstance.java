@@ -1,7 +1,6 @@
 package de.jlo.talendcomp.camunda.process;
 
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,56 +18,12 @@ public class ProcessInstance extends CamundaClient {
 	private String processDefinitionKey = null;
 	private boolean withVariablesInReturn = false;
 	private String businessKey = null;
-
-	public void addStartVariable(String varName, Object value) {
+	
+	public void addStartVariable(String varName, Object value, String dataObjectTypName) {
 		if (currentRequestVariablesNode == null) {
 			currentRequestVariablesNode = objectMapper.createObjectNode();
 		}
-		if (Util.isEmpty(varName)) {
-			throw new IllegalArgumentException("varName cannot be null or empty");
-		}
-		if (value != null) {
-			ObjectNode varNode = currentRequestVariablesNode.with(varName);
-			//varNode.put("type", value.getClass().getName());
-			//varNode.set("valueInfo", objectMapper.createObjectNode());
-			if (value instanceof Date) {
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-				String strValue = sdf.format((Date) value);
-				varNode.put("value", strValue);
-				varNode.put("type", "Date");
-			} else if (value instanceof JsonNode) {
-				varNode.set("value", (JsonNode) value);
-				varNode.put("type", "Object");
-			} else if (value instanceof String) {
-				varNode.put("value", (String) value);
-				varNode.put("type", "String");
-			} else if (value instanceof Short) {
-				varNode.put("value", (Short) value);
-				varNode.put("type", "Short");
-			} else if (value instanceof Integer) {
-				varNode.put("value", (Integer) value);
-				varNode.put("type", "Integer");
-			} else if (value instanceof Long) {
-				varNode.put("value", (Long) value);
-				varNode.put("type", "Long");
-			} else if (value instanceof Double) {
-				varNode.put("value", (Double) value);
-				varNode.put("type", "Double");
-			} else if (value instanceof Float) {
-				varNode.put("value", (Float) value);
-				varNode.put("type", "Float");
-			} else if (value instanceof BigDecimal) {
-				varNode.put("value", (BigDecimal) value);
-				varNode.put("type", "BigDecimal");
-			} else if (value instanceof Boolean) {
-				varNode.put("value", (Boolean) value);
-				varNode.put("type", "Boolean");
-			} else if (value instanceof byte[]) {
-				varNode.put("value", (byte[]) value);
-			} else {
-				varNode.put("value", value.toString());
-			}
-		}
+		addVariableNode(currentRequestVariablesNode, varName, value, "yyyy-MM-dd'T'HH:mm:ss", dataObjectTypName);
 	}
 
 	private JsonNode getCurrentResponseVariableValueNode(String varName, boolean nullable) throws Exception {

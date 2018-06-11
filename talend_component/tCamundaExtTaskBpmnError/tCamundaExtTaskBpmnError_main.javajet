@@ -34,6 +34,12 @@
 		globalMap.put("<%=cid%>", <%=cid%>);
 	}
 	try {
+<%
+	boolean useTaskIdFromInput = "true".equals(ElementParameterParser.getValue(node, "__TAKE_TASK_ID_FROM_DATA__"));
+	String taskIdFromInput = ElementParameterParser.getValue(node, "__TASK_ID__");
+	if (useTaskIdFromInput) { %>
+		<%=cid%>.setTaskIdFromInput(<%=taskIdFromInput%>);
+<%	} %>
 <%	if (conn != null && valuesFromFlow) { %>
 		<%=cid%>.bpmnError(<%=conn.getName()%>.errorCode);
 <% } else { %>
