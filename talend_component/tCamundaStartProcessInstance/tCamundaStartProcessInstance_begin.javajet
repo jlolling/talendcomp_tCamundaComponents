@@ -92,9 +92,9 @@
 <%	for (int i = 0; i < listColumns.size(); i++) {
 		IMetadataColumn mc = listColumns.get(i);
 		Map<String, String> variable = variables.get(i);
-		boolean onlyInResponse = "true".equals(variable.get("ONLY_IN_RESPONSE"));
-		if (onlyInResponse) {
-			continue;
+		String paramType = variable.get("PARAM_TYPE");
+		if (paramType == null || paramType.trim().isEmpty()) {
+			 paramType = "null";
 		}
 		String objectTypeName = variable.get("OBJECT_TYPE_NAME");
 		if (objectTypeName == null || objectTypeName.trim().isEmpty()) {
@@ -104,9 +104,13 @@
 		if (fieldLabel == null || fieldLabel.trim().isEmpty()) {
 			fieldLabel = "\"" + mc.getLabel()  + "\"";
 		}
-		String value = variable.get("ATTRIBUTE_VALUE");
+		boolean onlyInResponse = "true".equals(variable.get("ONLY_IN_RESPONSE"));
+		if (onlyInResponse) {
+			continue;
+		}
+		String value = variable.get("VALUE");
 		if (value != null && value.trim().isEmpty() == false) { %>
-		<%=cid%>.addStartVariable(<%=fieldLabel%>, <%=value%>, <%=objectTypeName%>);
+		<%=cid%>.addStartVariable(<%=fieldLabel%>, <%=value%>, <%=objectTypeName%>, "<%=paramType%>");
 <%		} %>
 <% } %>
 		// start process instance

@@ -32,11 +32,11 @@ public class Response extends CamundaClient {
 		this.setDebug(fetchAndLock.isDebug());
 	}
 	
-	public void addVariable(String varName, Object value, String pattern, String dataObjectTypName) {
+	public void addVariable(String varName, Object value, String pattern, String dataObjectTypName, String type) {
 		if (currentVariablesNode == null) {
 			currentVariablesNode = objectMapper.createObjectNode();
 		}
-		addVariableNode(currentVariablesNode, varName, value, pattern, dataObjectTypName);
+		addVariableNode(currentVariablesNode, varName, value, pattern, dataObjectTypName, type);
 	}
 	
 	public void measureTaskDuration() {

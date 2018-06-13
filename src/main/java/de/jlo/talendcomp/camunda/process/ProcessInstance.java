@@ -19,11 +19,11 @@ public class ProcessInstance extends CamundaClient {
 	private boolean withVariablesInReturn = false;
 	private String businessKey = null;
 	
-	public void addStartVariable(String varName, Object value, String dataObjectTypName) {
+	public void addStartVariable(String varName, Object value, String dataObjectTypName, String type) {
 		if (currentRequestVariablesNode == null) {
 			currentRequestVariablesNode = objectMapper.createObjectNode();
 		}
-		addVariableNode(currentRequestVariablesNode, varName, value, "yyyy-MM-dd'T'HH:mm:ss", dataObjectTypName);
+		addVariableNode(currentRequestVariablesNode, varName, value, "yyyy-MM-dd'T'HH:mm:ss", dataObjectTypName, type);
 	}
 
 	private JsonNode getCurrentResponseVariableValueNode(String varName, boolean nullable) throws Exception {

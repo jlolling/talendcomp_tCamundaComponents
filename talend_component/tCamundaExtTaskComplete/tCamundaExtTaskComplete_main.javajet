@@ -54,6 +54,10 @@
 		if (fieldLabel == null || fieldLabel.trim().isEmpty()) {
 			fieldLabel = "\"" + mc.getLabel()  + "\"";
 		}
+		String paramType = variable.get("PARAM_TYPE");
+		if (paramType == null || paramType.trim().isEmpty()) {
+			 paramType = "null";
+		}
 		String objectTypeName = variable.get("OBJECT_TYPE_NAME");
 		if (objectTypeName == null || objectTypeName.trim().isEmpty()) {
 			 objectTypeName = "null";
@@ -63,11 +67,11 @@
 			pattern = "null";
 		} %>
 <% 	if (conn != null && valuesFromFlow) { %>
-		<%=cid%>.addVariable(<%=fieldLabel%>, <%=conn.getName()%>.<%=mc.getLabel()%>, <%=pattern%>, <%=objectTypeName%>);
+		<%=cid%>.addVariable(<%=fieldLabel%>, <%=conn.getName()%>.<%=mc.getLabel()%>, <%=pattern%>, <%=objectTypeName%>, "<%=paramType%>");
 <%		} else {
-			String value = variable.get("VALUE"); 
+			String value = variable.get("VALUE");
 			if (value != null && value.trim().isEmpty() == false) { %>
-		<%=cid%>.addVariable(<%=fieldLabel%>, <%=value%>, <%=pattern%>, <%=objectTypeName%>);
+		<%=cid%>.addVariable(<%=fieldLabel%>, <%=value%>, <%=pattern%>, <%=objectTypeName%>, <%=paramType%>, "<%=paramType%>");
 <%			} %>
 <%		} %>
 <%	} %>

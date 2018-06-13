@@ -23,7 +23,7 @@ public class FetchAndLock extends CamundaClient {
 	private ArrayNode fetchedTaskArray = null;
 	private ObjectNode currentTask = null;
 	private int currentTaskIndex = 0;
-	private int secondsBetweenFetches = 1;
+	private long timeBetweenFetches = 1;
 	private long startTime = 0;
 	private long stopTime = 0;
 	private long currentTaskStartTime = 0;
@@ -76,9 +76,9 @@ public class FetchAndLock extends CamundaClient {
 			}
 			if (firstFetch == false) {
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("Wait " + secondsBetweenFetches + "s");
+					LOG.debug("Wait " + timeBetweenFetches + "ms");
 				}
-				Thread.sleep(secondsBetweenFetches * 1000l);
+				Thread.sleep(timeBetweenFetches);
 			} else {
 				firstFetch = false;
 			}
@@ -385,13 +385,19 @@ public class FetchAndLock extends CamundaClient {
 		}
 	}
 
-	public int getSecondsBetweenFetches() {
-		return secondsBetweenFetches;
+	public long getTimeBetweenFetches() {
+		return timeBetweenFetches;
 	}
 
-	public void setSecondsBetweenFetches(Integer secondsBetweenFetches) {
-		if (secondsBetweenFetches != null && secondsBetweenFetches >= 1) {
-			this.secondsBetweenFetches = secondsBetweenFetches;
+	public void setTimeBetweenFetches(Integer timeBetweenFetches) {
+		if (timeBetweenFetches != null && timeBetweenFetches >= 1) {
+			this.timeBetweenFetches = timeBetweenFetches.longValue();
+		}
+	}
+
+	public void setTimeBetweenFetches(Long timeBetweenFetches) {
+		if (timeBetweenFetches != null && timeBetweenFetches >= 1l) {
+			this.timeBetweenFetches = timeBetweenFetches.longValue();
 		}
 	}
 
