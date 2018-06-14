@@ -71,7 +71,7 @@
 <%		} else {
 			String value = variable.get("VALUE");
 			if (value != null && value.trim().isEmpty() == false) { %>
-		<%=cid%>.addVariable(<%=fieldLabel%>, <%=value%>, <%=pattern%>, <%=objectTypeName%>, <%=paramType%>, "<%=paramType%>");
+		<%=cid%>.addVariable(<%=fieldLabel%>, <%=value%>, <%=pattern%>, <%=objectTypeName%>, "<%=paramType%>");
 <%			} %>
 <%		} %>
 <%	} %>
