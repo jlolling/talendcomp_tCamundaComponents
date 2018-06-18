@@ -50,10 +50,13 @@ public class Response extends CamundaClient {
 		if (Util.isEmpty(taskIdFromInput) == false) {
 			taskId = taskIdFromInput;
 		} else {
+			if (fetchAndLock.isReturnAllTasksCurrentlyFetched()) {
+				throw new IllegalStateException("Fetch and Lock is configured to return all fetched tasks as array. Therefore it is not possible to take the current task-id from the fetchAndLock component. Please provide the task-id via the input flow!");
+			}
 			taskId = fetchAndLock.getCurrentTaskId();
 		}
 		if (taskId == null) {
-			throw new IllegalStateException("taskId not provided by the fetchAndLock component");
+			throw new IllegalStateException("Task-Id not provided by the fetchAndLock component");
 		}
 	}
 	

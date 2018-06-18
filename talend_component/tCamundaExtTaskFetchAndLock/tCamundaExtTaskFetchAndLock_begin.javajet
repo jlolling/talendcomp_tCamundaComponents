@@ -41,6 +41,8 @@
     	  maxTasks = "null";
     }
     boolean usePriority = "true".equals(ElementParameterParser.getValue(node, "__USE_PRIORITY__"));
+    boolean returnAllTasksCurrentlyFetched = "true".equals(ElementParameterParser.getValue(node, "__RETURN_ALL_TASK_CURRENTYL_FETCHED_AT_ONCE__"));
+    String taskArrayColumn = ElementParameterParser.getValue(node, "__TASK_ARRAY_COLUMN__");
     String workerId = ElementParameterParser.getValue(node, "__WORKER_ID__");
     String lockDuration = ElementParameterParser.getValue(node, "__LOCK_DURATION__");
     String stopTime = ElementParameterParser.getValue(node, "__STOP_TIME__");
@@ -53,6 +55,7 @@
     String waitTimeAfterError = ElementParameterParser.getValue(node, "__WAIT_TIME_AFTER_ERROR__");
     String timeout = ElementParameterParser.getValue(node, "__TIMEOUT__");
  	 List<Map<String, String>> configList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__COLUMN_CONFIG__");
+ 	 List<Map<String, String>> varList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__VARIABLES_CONFIG__");
 	 IConnection conn = null;
 	 List<? extends IConnection> outConns = NodeUtil.getOutgoingConnections(node, IConnectionCategory.DATA);
 	 if (outConns.size() > 0) {
@@ -99,21 +102,57 @@
 <%	if (timeout != null && timeout.trim().isEmpty() == false) { %>
 	<%=cid%>.setTimeout(<%=timeout%>);
 <%	} %>
-<%	for (int x = 0; x < listColumns.size(); x++) {
-		IMetadataColumn mc = listColumns.get(x);
-		Map<String, String> config = configList.get(x);
-		String fieldLabel = config.get("ATTRIBUTE_ALIAS");
-		if (fieldLabel == null || fieldLabel.trim().isEmpty()) {
-			 fieldLabel = "\"" + mc.getLabel()  + "\"";
-		} %>
+<%	if (returnAllTasksCurrentlyFetched) {
+		for (int x = 0; x < varList.size(); x++) {
+			Map<String, String> var = varList.get(x);
+			String fieldLabel = var.get("ATTRIBUTE_ALIAS"); %>
 	<%=cid%>.addVariable(<%=fieldLabel%>);
-<% } %>
+<% 	}
+	} else {
+		for (int x = 0; x < configList.size(); x++) {
+			IMetadataColumn mc = listColumns.get(x);
+			Map<String, String> config = configList.get(x);
+			String fieldLabel = config.get("ATTRIBUTE_ALIAS");
+			if (fieldLabel == null || fieldLabel.trim().isEmpty()) {
+				 fieldLabel = "\"" + mc.getLabel()  + "\"";
+			} %>
+	<%=cid%>.addVariable(<%=fieldLabel%>);
+<% 	}
+	} %>
 	globalMap.put("httpClient_<%=cid%>", <%=cid%>.getHttpClient());
 	globalMap.put("<%=cid%>", <%=cid%>);
+<%	if (returnAllTasksCurrentlyFetched) { %>
 	while (true) {
 		try {
 			// next calls repeatly fetchAnLock and iterates through the fetched tasks
-			if (<%=cid%>.next() == false) {
+			com.fasterxml.jackson.databind.node.ArrayNode taskArray_<%=cid%> = null;
+			if (<%=cid%>.nextFetchAndLock() == false) {
+				globalMap.put("<%=cid%>_NB_TASKS_CURRENTLY_FETCHED", 0);
+				globalMap.remove("<%=cid%>_CURRENT_FETCHED_TASKS_AS_ARRAY_NODE");
+				break;
+			} else {
+				taskArray_<%=cid%> = <%=cid%>.getTasksCurrentlyFetched();
+				globalMap.put("<%=cid%>_NB_TASKS_CURRENTLY_FETCHED", <%=cid%>.getCountTasksCurrentlyFetched());
+				globalMap.put("<%=cid%>_CURRENT_FETCHED_TASKS_AS_ARRAY_NODE", taskArray_<%=cid%>);
+			}
+<%		if (conn != null) { %>
+			<%=conn.getName()%>.<%=taskArrayColumn%> = taskArray_<%=cid%>;
+<%		} %>
+			Integer count_<%=cid%> = (Integer) globalMap.get("<%=cid%>_NB_LINE");
+			if (count_<%=cid%> == null) {
+				count_<%=cid%> = 0;
+			}
+			count_<%=cid%> = count_<%=cid%> + 1;
+			globalMap.put("<%=cid%>_NB_LINE", count_<%=cid%>);	
+		} catch (Exception ex) {
+			globalMap.put("<%=cid%>_ERROR_MESSAGE", ex.getMessage());
+			throw ex;
+		}
+<% } else { %>
+	while (true) {
+		try {
+			// next calls repeatly fetchAnLock and iterates through the fetched tasks
+			if (<%=cid%>.nextTask() == false) {
 				globalMap.put("<%=cid%>_NB_TASKS_CURRENTLY_FETCHED", <%=cid%>.getCountTasksCurrentlyFetched());
 				globalMap.put("<%=cid%>_IS_LAST_TASKS_CURRENTLY_FETCHED", <%=cid%>.isLastTaskCurrentlyFetched());
 				break;
@@ -161,3 +200,4 @@
 			globalMap.put("<%=cid%>_ERROR_MESSAGE", ex.getMessage());
 			throw ex;
 		}
+<%	} %>
