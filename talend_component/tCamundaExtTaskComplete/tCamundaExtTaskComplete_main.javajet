@@ -77,9 +77,13 @@
 <%	} %>
 <%
 	boolean useTaskIdFromInput = "true".equals(ElementParameterParser.getValue(node, "__TAKE_TASK_ID_FROM_DATA__"));
-	String taskIdFromInput = ElementParameterParser.getValue(node, "__TASK_ID__");
-	if (useTaskIdFromInput) { %>
+	if (useTaskIdFromInput) {
+		String taskIdFromInput = ElementParameterParser.getValue(node, "__TASK_ID__");  
+		String taskExpTimeFromInput = ElementParameterParser.getValue(node, "__TASK_EXPIRATION_TIME__"); %>
 		<%=cid%>.setTaskIdFromInput(<%=taskIdFromInput%>);
+<%		if (checkLockExpirationTime) { %>
+		<%=cid%>.setTaskExpirationTime(<%=taskExpTimeFromInput%>);
+<%		} %>
 <%	} %>
 		<%=cid%>.complete();
 		globalMap.put("<%=cid%>_CURRENT_TASK_IS_EXPIRED", <%=cid%>.isCurrentTaskExpired());

@@ -13,6 +13,7 @@ public class Response extends CamundaClient {
 
 	private String taskId = null;
 	private String taskIdFromInput = null;
+	private Date taskExpirationTimeFromInput = null;
 	private ObjectNode currentVariablesNode = null;
 	private FetchAndLock fetchAndLock = null;
 	private boolean checkLockExpiration = true;
@@ -51,12 +52,37 @@ public class Response extends CamundaClient {
 			taskId = taskIdFromInput;
 		} else {
 			if (fetchAndLock.isReturnAllTasksCurrentlyFetched()) {
-				throw new IllegalStateException("Fetch and Lock is configured to return all fetched tasks as array. Therefore it is not possible to take the current task-id from the fetchAndLock component. Please provide the task-id via the input flow!");
+				throw new IllegalStateException("Fetch and Lock is configured to return all fetched tasks at once as array. Therefore it is not possible to take the current task-id from the fetchAndLock component. Please provide the task-id via the input flow!");
 			}
 			taskId = fetchAndLock.getCurrentTaskId();
 		}
 		if (taskId == null) {
 			throw new IllegalStateException("Task-Id not provided by the fetchAndLock component");
+		}
+	}
+	
+	private Date getTaskExpirationTime() throws Exception {
+		if (fetchAndLock.isReturnAllTasksCurrentlyFetched()) {
+			if (taskExpirationTimeFromInput == null) {
+				throw new IllegalStateException("Fetch and Lock is configured to return all fetched tasks at once as array. Therefore it is not possible to take the current task expiration time from the fetchAnLock component. Please provide the task expiration time via the separate input.");
+			}
+			return taskExpirationTimeFromInput;
+		} else {
+			return fetchAndLock.getCurrentTaskLockExpirationTime();
+		}
+	}
+	
+	private void checkTaskExpiration() throws Exception {
+		if (checkLockExpiration) {
+			Date taskLockExpirationTime = getTaskExpirationTime();
+			if (taskLockExpirationTime != null && new Date().before(taskLockExpirationTime) == false) {
+				currentTaskExpired = true;
+				if (suppressExpiredTasks) {
+					LOG.warn("Task: " + fetchAndLock.getCurrentTask().toString() + " has been expired and will be ignored");
+				} else {
+					throw new Exception("Lock expiration time exceeded for Task: " + fetchAndLock.getCurrentTask().toString());
+				}
+			}
 		}
 	}
 	
@@ -67,17 +93,7 @@ public class Response extends CamundaClient {
 			throw new IllegalStateException("workerId not provided by the fetchAndLock component");
 		}
 		setupTaskId();
-		if (checkLockExpiration) {
-			Date taskLockExpirationTime = fetchAndLock.getCurrentTaskLockExpirationTime();
-			if (taskLockExpirationTime != null && new Date().before(taskLockExpirationTime) == false) {
-				currentTaskExpired = true;
-				if (suppressExpiredTasks) {
-					LOG.warn("Task: " + fetchAndLock.getCurrentTask().toString() + " has been expired and will be ignored");
-				} else {
-					throw new Exception("Lock expiration time exceeded for Task: " + fetchAndLock.getCurrentTask().toString());
-				}
-			}
-		}
+		checkTaskExpiration();
 		ObjectNode requestPayload = objectMapper.createObjectNode();
 		requestPayload.put("workerId", workerId);
 		requestPayload.set("variables", currentVariablesNode);
@@ -198,6 +214,13 @@ public class Response extends CamundaClient {
 			throw new IllegalArgumentException("Task ID from input data cannot be null or empty!");
 		}
 		this.taskIdFromInput = taskIdFromInput;
+	}
+
+	public void setTaskExpirationTime(Date taskExpirationTime) {
+		if (taskExpirationTime == null) {
+			throw new IllegalArgumentException("Cannot set null as taskExpirationTime");
+		}
+		this.taskExpirationTimeFromInput = taskExpirationTime;
 	}
 
 }
