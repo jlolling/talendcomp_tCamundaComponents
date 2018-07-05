@@ -47,10 +47,14 @@
 		globalMap.put("<%=cid%>", <%=cid%>);
 	}
 	try {
-<%	for (int i = 0; i < listColumns.size(); i++) {
-		IMetadataColumn mc = listColumns.get(i);
+<%	for (int i = 0; i < variables.size(); i++) {
 		Map<String, String> variable = variables.get(i);
+		boolean use = "true".equals(variable.get("USE"));
+		if (use == false) {
+			continue;
+		}
 		String fieldLabel = variable.get("ATTRIBUTE_ALIAS");
+		IMetadataColumn mc = listColumns.get(i);
 		if (fieldLabel == null || fieldLabel.trim().isEmpty()) {
 			fieldLabel = "\"" + mc.getLabel()  + "\"";
 		}
