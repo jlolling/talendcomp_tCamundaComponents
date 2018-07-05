@@ -139,7 +139,7 @@ public class Response extends CamundaClient {
 		if (Utils.isEmpty(errorDetails) == false) {
 			requestPayload.put("errorDetails", errorDetails);
 		}
-		if (retries != null) {
+		if (retries != null && retries > 0) {
 			requestPayload.put("retries", retries);
 		} else {
 			requestPayload.put("retries", 0);
