@@ -56,6 +56,7 @@
     String timeout = ElementParameterParser.getValue(node, "__TIMEOUT__");
  	 List<Map<String, String>> configList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__COLUMN_CONFIG__");
  	 List<Map<String, String>> varList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__VARIABLES_CONFIG__");
+    boolean deserializeJson = "true".equals(ElementParameterParser.getValue(node, "__DESERIALIZE_JSON_VALUES__"));
 	 IConnection conn = null;
 	 List<? extends IConnection> outConns = NodeUtil.getOutgoingConnections(node, IConnectionCategory.DATA);
 	 if (outConns.size() > 0) {
@@ -89,6 +90,7 @@
 	<%=cid%>.setWorkerId(<%=workerId%>);
 	<%=cid%>.setNumberTaskToFetch(<%=maxTasks%>);
 	<%=cid%>.setLockDuration(<%=lockDuration%>);
+	<%=cid%>.setDeserializeFetchedJsonValues(<%=deserializeJson%>);
 <%	if (stopTime != null && stopTime.trim().isEmpty() == false) { %>
 	<%=cid%>.setStopTime(<%=stopTime%>);
 <%	} %>

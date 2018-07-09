@@ -21,7 +21,7 @@ public class FetchAndLock extends CamundaClient {
 	private List<String> requestedVariables = new ArrayList<String>();
 	private int numberTaskToFetch = 1;
 	private ArrayNode fetchedTaskArray = null;
-	private ObjectNode currentTask = null;
+	private ObjectNode currentRawTask = null;
 	private int currentTaskIndex = 0;
 	private long timeBetweenFetches = 1;
 	private long startTime = 0;
@@ -36,6 +36,7 @@ public class FetchAndLock extends CamundaClient {
 	protected String topicName = null;
 	private boolean usePriority = false;
 	private boolean returnAllTasksCurrentlyFetched = false;
+	private boolean deserializeFetchedJsonValues = false;
 	
 	public FetchAndLock() {
 		startTime = System.currentTimeMillis();
@@ -72,7 +73,7 @@ public class FetchAndLock extends CamundaClient {
 		currentTaskIndex = 0;
 		fetchedTaskArray = null;
 		currentTaskStartTime = 0;
-		currentTask = null;
+		currentRawTask = null;
 		while (true) {
 			if (stopTimeReached()) {
 				break;
@@ -133,18 +134,41 @@ public class FetchAndLock extends CamundaClient {
 		return false;
 	}
 	
+	public ObjectNode getCurrentTask() throws Exception {
+		return getSimplifiedTask(currentRawTask);
+	}
+	
+	public ObjectNode getSimplifiedTask(JsonNode rawTaskNode) throws Exception {
+		ObjectNode taskNode = objectMapper.createObjectNode();
+		String id = getTaskId(rawTaskNode);
+		taskNode.put("taskId", id);
+		taskNode.put("id", id);
+		taskNode.put("processInstanceId", getTaskProcessInstanceId(rawTaskNode));
+		taskNode.set("lockExpirationTime", rawTaskNode.get("lockExpirationTime"));
+		taskNode.set("activityId", rawTaskNode.get("activityId"));
+		taskNode.set("activityInstanceId", rawTaskNode.get("activityInstanceId"));
+		taskNode.set("errorMessage", rawTaskNode.get("errorMessage"));
+		taskNode.set("errorDetails", rawTaskNode.get("errorDetails"));
+		taskNode.set("executionId", rawTaskNode.get("executionId"));
+		taskNode.set("processDefinitionId", rawTaskNode.get("processDefinitionId"));
+		taskNode.set("processDefinitionKey", rawTaskNode.get("processDefinitionKey"));
+		taskNode.set("tenantId", rawTaskNode.get("tenantId"));
+		taskNode.set("retries", rawTaskNode.get("retries"));
+		taskNode.set("suspended", rawTaskNode.get("suspended"));
+		taskNode.set("workerId", rawTaskNode.get("workerId"));
+		taskNode.set("priority", rawTaskNode.get("priority"));
+		taskNode.set("topicName", rawTaskNode.get("topicName"));
+		for (String varName : requestedVariables) {
+			taskNode.set(varName, getTaskVariableValueNode(rawTaskNode, varName, true, true));
+		}
+		return taskNode;
+	}
+	
 	public ArrayNode getTasksCurrentlyFetched() throws Exception {
 		ArrayNode an = objectMapper.createArrayNode();
 		// iterate through the task and set the variables
 		for (JsonNode oneFetchedTask : fetchedTaskArray) {
-			ObjectNode oneResult = objectMapper.createObjectNode();
-			oneResult.put("taskId", getTaskId(oneFetchedTask));
-			oneResult.put("processInstanceId", getTaskProcessInstanceId(oneFetchedTask));
-			oneResult.set("lockExpirationTime", oneFetchedTask.get("lockExpirationTime"));
-			for (String varName : requestedVariables) {
-				oneResult.set(varName, getTaskVariableValueNode(oneFetchedTask, varName, true, true));
-			}
-			an.add(oneResult);
+			an.add(getSimplifiedTask(oneFetchedTask));
 		}
 		return an;
 	}
@@ -164,7 +188,7 @@ public class FetchAndLock extends CamundaClient {
 
 	public boolean nextTask() throws Exception {
 		currentTaskStartTime = 0;
-		currentTask = null;
+		currentRawTask = null;
 		if (Thread.currentThread().isInterrupted()) {
 			return false;
 		}
@@ -173,9 +197,9 @@ public class FetchAndLock extends CamundaClient {
 		}
 		if (fetchedTaskArray != null) {
 			if (currentTaskIndex < fetchedTaskArray.size()) {
-				currentTask = (ObjectNode) fetchedTaskArray.get(currentTaskIndex++);
+				currentRawTask = (ObjectNode) fetchedTaskArray.get(currentTaskIndex++);
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("Current task: " + currentTask);
+					LOG.debug("Current task: " + currentRawTask);
 				}
 				currentTaskStartTime = System.currentTimeMillis();
 				return true;
@@ -213,10 +237,10 @@ public class FetchAndLock extends CamundaClient {
 	}
 	
 	public String getCurrentTaskId() {
-		if (currentTask == null || currentTask.isNull()) {
+		if (currentRawTask == null || currentRawTask.isNull()) {
 			throw new IllegalStateException("Current task not fetched");
 		}
-		return getTaskId(currentTask);
+		return getTaskId(currentRawTask);
 	}
 	
 	public String getTaskId(JsonNode taskNode) {
@@ -231,10 +255,10 @@ public class FetchAndLock extends CamundaClient {
 	}
 
 	public Date getCurrentTaskLockExpirationTime() throws Exception {
-		if (currentTask == null || currentTask.isNull()) {
+		if (currentRawTask == null || currentRawTask.isNull()) {
 			throw new IllegalStateException("Current task not fetched");
 		}
-		return getTaskLockExpirationTime(currentTask);
+		return getTaskLockExpirationTime(currentRawTask);
 	}
 
 	public Date getTaskLockExpirationTime(JsonNode taskNode) throws Exception {
@@ -259,10 +283,10 @@ public class FetchAndLock extends CamundaClient {
 	}
 
 	public String getCurrentTaskProcessInstanceId() {
-		if (currentTask == null || currentTask.isNull()) {
+		if (currentRawTask == null || currentRawTask.isNull()) {
 			throw new IllegalStateException("Current task not fetched");
 		}
-		return getTaskProcessInstanceId(currentTask);
+		return getTaskProcessInstanceId(currentRawTask);
 	}
 	
 	public String getTaskProcessInstanceId(JsonNode taskNode) {
@@ -276,13 +300,20 @@ public class FetchAndLock extends CamundaClient {
 		return id;
 	}
 	
-	private JsonNode getCurrentTaskVariableValueNode(String varName, boolean missingAllowed, boolean nullable) throws Exception {
-		if (currentTask == null || currentTask.isNull()) {
+	public Integer getCurrentTaskRetries() {
+		if (currentRawTask == null || currentRawTask.isNull()) {
 			throw new IllegalStateException("Current task not fetched");
 		}
-		return getTaskVariableValueNode(currentTask, varName, missingAllowed, nullable);
+		return getTaskRetries(currentRawTask);
 	}
-
+	
+	public Integer getTaskRetries(JsonNode taskNode) {
+		if (taskNode == null || taskNode.isNull()) {
+			throw new IllegalStateException("Task node cannot be null or a NullNode");
+		}
+		return taskNode.get("retries").asInt();
+	}
+	
 	private JsonNode getTaskVariableValueNode(JsonNode taskNode, String varName, boolean missingAllowed, boolean nullable) throws Exception {
 		if (Util.isEmpty(varName)) {
 			throw new IllegalArgumentException("Variable name cannot be null or empty");
@@ -290,25 +321,38 @@ public class FetchAndLock extends CamundaClient {
 		if (taskNode == null || taskNode.isNull()) {
 			throw new IllegalStateException("Task node cannot be null or a NullNode");
 		}
-		JsonNode varNode = taskNode.get("variables");
-		if (varNode instanceof ObjectNode) {
-			JsonNode valueNode = varNode.path(varName).path("value");
+		JsonNode variablesNode = taskNode.get("variables");
+		if (variablesNode instanceof ObjectNode) {
+			JsonNode oneVarNode = variablesNode.path(varName);
+			JsonNode valueNode = oneVarNode.path("value");
 			if (missingAllowed == false && valueNode.isMissingNode()) {
-				throw new Exception("The variable: " + varName + " is missing. Variables node: " + varNode.toString());
+				throw new Exception("The variable: " + varName + " is missing. Variables node: " + variablesNode.toString());
 			}
 			if (valueNode.isNull()) {
 				if (nullable == false) {
-					throw new Exception("The variable: " + varName + " is null. Variables node: " + varNode.toString());
+					throw new Exception("The variable: " + varName + " is null. Variables node: " + variablesNode.toString());
 				}
 				return null;
 			} else {
-				return valueNode;
+				JsonNode typeNode = oneVarNode.path("type");
+				if (deserializeFetchedJsonValues && "json".equalsIgnoreCase(typeNode.asText())) {
+					return objectMapper.readTree(valueNode.asText());
+				} else {
+					return valueNode;
+				}
 			}
 		} else {
 			throw new IllegalStateException("Task without variables received. Task: " + taskNode.toString());
 		}
 	}
 	
+	private JsonNode getCurrentTaskVariableValueNode(String varName, boolean missingAllowed, boolean nullable) throws Exception {
+		if (currentRawTask == null || currentRawTask.isNull()) {
+			throw new IllegalStateException("Current task not fetched");
+		}
+		return getTaskVariableValueNode(currentRawTask, varName, missingAllowed, nullable);
+	}
+
 	public JsonNode getCurrentTaskVariableValueAsObject(String varName, boolean missingAllowed, boolean nullable) throws Exception {
 		JsonNode valueNode = getCurrentTaskVariableValueNode(varName, missingAllowed, nullable);
 		if (valueNode != null) {
@@ -466,7 +510,7 @@ public class FetchAndLock extends CamundaClient {
 	}
 
 	public void setStopTime(Integer secondsFetching) {
-		if (secondsFetching != null) {
+		if (secondsFetching != null && secondsFetching > 0) {
 			this.stopTime = System.currentTimeMillis() + 10l + (secondsFetching * 1000l);
 		}
 	}
@@ -503,8 +547,8 @@ public class FetchAndLock extends CamundaClient {
 		return lockDuration;
 	}
 
-	public ObjectNode getCurrentTask() {
-		return currentTask;
+	public ObjectNode getCurrentRawTask() {
+		return currentRawTask;
 	}
 
 	public long getNumberFetches() {
@@ -554,6 +598,16 @@ public class FetchAndLock extends CamundaClient {
 
 	public boolean isReturnAllTasksCurrentlyFetched() {
 		return returnAllTasksCurrentlyFetched;
+	}
+
+	public boolean isDeserializeFetchedJsonValues() {
+		return deserializeFetchedJsonValues;
+	}
+
+	public void setDeserializeFetchedJsonValues(Boolean deserializeFetchedJsonValues) {
+		if (deserializeFetchedJsonValues != null) {		
+			this.deserializeFetchedJsonValues = deserializeFetchedJsonValues.booleanValue();
+		}
 	}
 	
 }

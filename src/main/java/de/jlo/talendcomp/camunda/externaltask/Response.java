@@ -78,9 +78,9 @@ public class Response extends CamundaClient {
 			if (taskLockExpirationTime != null && new Date().before(taskLockExpirationTime) == false) {
 				currentTaskExpired = true;
 				if (suppressExpiredTasks) {
-					LOG.warn("Task: " + fetchAndLock.getCurrentTask().toString() + " has been expired and will be ignored");
+					LOG.warn("Task: " + fetchAndLock.getCurrentRawTask().toString() + " has been expired and will be ignored");
 				} else {
-					throw new Exception("Lock expiration time exceeded for Task: " + fetchAndLock.getCurrentTask().toString());
+					throw new Exception("Lock expiration time exceeded for Task: " + fetchAndLock.getCurrentRawTask().toString());
 				}
 			}
 		}
