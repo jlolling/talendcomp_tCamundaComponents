@@ -159,7 +159,10 @@ public class FetchAndLock extends CamundaClient {
 		taskNode.set("priority", rawTaskNode.get("priority"));
 		taskNode.set("topicName", rawTaskNode.get("topicName"));
 		for (String varName : requestedVariables) {
-			taskNode.set(varName, getTaskVariableValueNode(rawTaskNode, varName, true, true));
+			JsonNode valueNode = getTaskVariableValueNode(rawTaskNode, varName, true, true);
+			if (valueNode != null && valueNode.isMissingNode() == false) {
+				taskNode.set(varName, valueNode);
+			}
 		}
 		return taskNode;
 	}
@@ -328,11 +331,11 @@ public class FetchAndLock extends CamundaClient {
 			if (missingAllowed == false && valueNode.isMissingNode()) {
 				throw new Exception("The variable: " + varName + " is missing. Variables node: " + variablesNode.toString());
 			}
-			if (valueNode.isNull()) {
+			if (valueNode.isNull() || valueNode.isMissingNode()) {
 				if (nullable == false) {
 					throw new Exception("The variable: " + varName + " is null. Variables node: " + variablesNode.toString());
 				}
-				return null;
+				return valueNode;
 			} else {
 				JsonNode typeNode = oneVarNode.path("type");
 				if (deserializeFetchedJsonValues && "json".equalsIgnoreCase(typeNode.asText())) {
