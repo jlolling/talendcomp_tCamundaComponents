@@ -63,7 +63,6 @@
 		}
 		count_<%=cid%> = count_<%=cid%> + 1;
 		globalMap.put("<%=cid%>_NB_LINE", count_<%=cid%>);	
-		globalMap.put("<%=cid%>_CURRENT_TASK_DURATION", <%=cid%>.getCurrentTaskDuration());	
 	} catch (Exception ex) {
 		globalMap.put("<%=cid%>_ERROR_MESSAGE", ex.getMessage());
 		throw ex;
