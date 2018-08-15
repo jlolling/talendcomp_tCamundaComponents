@@ -110,7 +110,15 @@
 		}
 		String value = variable.get("VALUE");
 		if (value != null && value.trim().isEmpty() == false) { %>
-		<%=cid%>.addStartVariable(<%=fieldLabel%>, <%=value%>, <%=objectTypeName%>, "<%=paramType%>");
+		{
+			Object var = <%=value%>;
+<%		if (mc.isNullable() == false) { %>
+			if (var == null) {
+				throw new Exception("Variable " + <%=fieldLabel%> + " cannot be null");
+			}
+<%		} %>
+			<%=cid%>.addStartVariable(<%=fieldLabel%>, var, <%=objectTypeName%>, "<%=paramType%>");
+		}
 <%		} %>
 <% } %>
 		// start process instance

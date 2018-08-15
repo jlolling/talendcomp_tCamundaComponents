@@ -10,10 +10,11 @@ import de.jlo.talendcomp.camunda.HttpClient;
 import de.jlo.talendcomp.camunda.Util;
 
 public class Response extends CamundaClient {
-
+	
 	private String taskId = null;
-	private long currentTaskStartTime = 0;
 	private String taskIdFromInput = null;
+	private String processInstanceId = null;
+	private String processInstanceIdFromInput = null;
 	private Date taskExpirationTimeFromInput = null;
 	private ObjectNode currentVariablesNode = null;
 	private FetchAndLock fetchAndLock = null;
@@ -117,6 +118,19 @@ public class Response extends CamundaClient {
 			throw new Exception(message);
 		}
 	}
+	
+	public void updateProcessVariables() throws Exception {
+		setupProcessInstanceId();
+		HttpClient client = getHttpClient();
+		ObjectNode requestPayload = objectMapper.createObjectNode();
+		requestPayload.set("modifications", currentVariablesNode);
+		client.post(getProcessVariablesEndpointURL(processInstanceId), requestPayload, false);
+		if (client.getStatusCode() != 204) {
+			String message = "Update variables POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
+			LOG.error(message);
+			throw new Exception(message);
+		}
+	}
 
 	public void failure(String errorMessage, String errorDetails, Integer retries, Number retryTimeout) throws Exception {
 		String workerId = fetchAndLock.getWorkerId();
@@ -206,6 +220,26 @@ public class Response extends CamundaClient {
 			throw new IllegalArgumentException("Cannot set null as taskExpirationTime");
 		}
 		this.taskExpirationTimeFromInput = taskExpirationTime;
+	}
+
+	public void setProcessInstanceIdFromInput(String processInstanceId) {
+		if (Util.isEmpty(processInstanceId) == false) {
+			this.processInstanceIdFromInput = processInstanceId;
+		}
+	}
+	
+	private void setupProcessInstanceId() {
+		if (Util.isEmpty(processInstanceIdFromInput) == false) {
+			processInstanceId = processInstanceIdFromInput;
+		} else {
+			if (fetchAndLock.isReturnAllTasksCurrentlyFetched()) {
+				throw new IllegalStateException("Fetch and Lock is configured to return all fetched tasks at once as array. Therefore it is not possible to take the current process-instance-id from the fetchAndLock component. Please provide the process-instance-id via the input flow!");
+			}
+			processInstanceId = fetchAndLock.getCurrentTaskProcessInstanceId();
+		}
+		if (processInstanceId == null) {
+			throw new IllegalStateException("Process-Instance-Id not provided by the fetchAndLock component");
+		}
 	}
 
 }

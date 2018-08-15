@@ -33,8 +33,6 @@
 	 }
 	 List<Map<String, String>> variables = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__VARIABLES__");
 	 boolean valuesFromFlow = "true".equals(ElementParameterParser.getValue(node, "__TAKE_VALUE_FROM_FLOW__"));
-	 boolean checkLockExpirationTime = "true".equals(ElementParameterParser.getValue(node, "__CHECK_LOCK_EXPIRATION__"));
-	 boolean suppressExpiredTasks = "true".equals(ElementParameterParser.getValue(node, "__SUPPRESS_EXPIRED_TASK__"));
     String fetchAndLock = ElementParameterParser.getValue(node, "__FETCH_AND_LOCK_COMPONENT__");
 %>
 	de.jlo.talendcomp.camunda.externaltask.Response <%=cid%> = (de.jlo.talendcomp.camunda.externaltask.Response) globalMap.get("<%=cid%>");
@@ -42,8 +40,6 @@
 		<%=cid%> = new de.jlo.talendcomp.camunda.externaltask.Response((de.jlo.talendcomp.camunda.externaltask.FetchAndLock) globalMap.get("<%=fetchAndLock%>"));
 		<%=cid%>.initLogger("<%=cid%>");
 		<%=cid%>.setDebug(<%=debug%>);
-		<%=cid%>.setCheckLockExpiration(<%=checkLockExpirationTime%>);
-		<%=cid%>.setSuppressExpiredTasks(<%=suppressExpiredTasks%>);
 		globalMap.put("<%=cid%>", <%=cid%>);
 	}
 	try {
@@ -88,17 +84,12 @@
 <%		} %>
 <%	} %>
 <%
-	boolean useTaskIdFromInput = "true".equals(ElementParameterParser.getValue(node, "__TAKE_TASK_ID_FROM_DATA__"));
-	if (useTaskIdFromInput) {
-		String taskIdFromInput = ElementParameterParser.getValue(node, "__TASK_ID__");  
-		String taskExpTimeFromInput = ElementParameterParser.getValue(node, "__TASK_EXPIRATION_TIME__"); %>
-		<%=cid%>.setTaskIdFromInput(<%=taskIdFromInput%>);
-<%		if (checkLockExpirationTime) { %>
-		<%=cid%>.setTaskExpirationTime(<%=taskExpTimeFromInput%>);
-<%		} %>
+	boolean useProcessInstanceIdFromInput = "true".equals(ElementParameterParser.getValue(node, "__TAKE_PROCESS_INSTANCE_ID_FROM_DATA__"));
+	if (useProcessInstanceIdFromInput) {
+		String processInstanceIdFromInput = ElementParameterParser.getValue(node, "__PROCESS_INSTANCE_ID__");  %>
+		<%=cid%>.setProcessInstanceIdFromInput(<%=processInstanceIdFromInput%>);
 <%	} %>
-		<%=cid%>.complete();
-		globalMap.put("<%=cid%>_CURRENT_TASK_IS_EXPIRED", <%=cid%>.isCurrentTaskExpired());
+		<%=cid%>.updateProcessVariables();
 		Integer count_<%=cid%> = (Integer) globalMap.get("<%=cid%>_NB_LINE");
 		if (count_<%=cid%> == null) {
 			count_<%=cid%> = 0;
@@ -106,7 +97,6 @@
 		count_<%=cid%> = count_<%=cid%> + 1;
 		globalMap.put("<%=cid%>_NB_LINE", count_<%=cid%>);	
 	} catch (Exception ex) {
-		globalMap.put("<%=cid%>_CURRENT_TASK_IS_EXPIRED", <%=cid%>.isCurrentTaskExpired());
 		globalMap.put("<%=cid%>_ERROR_MESSAGE", ex.getMessage());
 		throw ex;
 	}

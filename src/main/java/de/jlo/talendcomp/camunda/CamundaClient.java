@@ -100,6 +100,12 @@ public class CamundaClient {
 		}
 	}
 	
+	protected String getProcessVariablesEndpointURL(String processInstanceId) {
+		String extTaskURL = getExternalTaskEndpointURL();
+		String endpointVariable = "/process-instance/" + processInstanceId + "/variables";
+		return extTaskURL.replace("/external-task", endpointVariable);
+	}
+
 	public boolean isNeedAuthorization() {
 		return needAuthorization;
 	}

@@ -4,7 +4,7 @@
 
 	<groupId>de.jlo.talendcomp.camunda</groupId>
 	<artifactId>jlo-talendcomp-camunda</artifactId>
-	<version>5.1</version>
+	<version>6.0</version>
 	<packaging>jar</packaging>
 
 	<name>jlo-talendcomp-camunda-externaltask</name>
@@ -56,6 +56,14 @@
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<configuration>
 					<archive>
@@ -90,6 +98,16 @@
 						</goals>
 						<configuration>
 							<componentName>tCamundaExtTaskComplete</componentName>
+							<noJars>true</noJars>
+						</configuration>
+					</execution>
+					<execution>
+						<id>tCamundaExtTaskUpdateVariables</id>
+						<goals>
+							<goal>component</goal>
+						</goals>
+						<configuration>
+							<componentName>tCamundaExtTaskUpdateVariables</componentName>
 							<noJars>true</noJars>
 						</configuration>
 					</execution>
