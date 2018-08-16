@@ -5,6 +5,8 @@ This component fetch and locks tasks from the Camunda engine
 This component sends the complete response to the Camunda engine
 ## tCamundaExtTaskBpmnError
 This component sends a BPMN Error response to the Camunda engine
+## tCamundaExtTaskUpdateVariables
+This component updates or sets the values of the Camunda process
 ## tCamundaExtTaskFailure
 This component sends a technical failure response to the Camunda engine
 ## tCamundaExtTaskUnlock
