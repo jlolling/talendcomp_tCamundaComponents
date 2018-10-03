@@ -103,7 +103,7 @@ public class FetchAndLock extends CamundaClient {
 				throw e;
 			}
 			numberFetches++;
-			if (fetchedTaskArray.size() > 0) {
+			if (fetchedTaskArray != null && fetchedTaskArray.size() > 0) {
 				numberSucessfulFetches++;
 				numberTasksReceived = numberTasksReceived + fetchedTaskArray.size();
 				break;
@@ -170,8 +170,10 @@ public class FetchAndLock extends CamundaClient {
 	public ArrayNode getTasksCurrentlyFetched() throws Exception {
 		ArrayNode an = objectMapper.createArrayNode();
 		// iterate through the task and set the variables
-		for (JsonNode oneFetchedTask : fetchedTaskArray) {
-			an.add(getSimplifiedTask(oneFetchedTask));
+		if (fetchedTaskArray != null) {
+			for (JsonNode oneFetchedTask : fetchedTaskArray) {
+				an.add(getSimplifiedTask(oneFetchedTask));
+			}
 		}
 		return an;
 	}
@@ -236,7 +238,11 @@ public class FetchAndLock extends CamundaClient {
 	 * @return true if task is the last
 	 */
 	public boolean isLastTaskCurrentlyFetched() {
-		return currentTaskIndex == fetchedTaskArray.size();
+		if (fetchedTaskArray != null) {
+			return currentTaskIndex == fetchedTaskArray.size();
+		} else {
+			return true;
+		}
 	}
 	
 	public String getCurrentTaskId() {
