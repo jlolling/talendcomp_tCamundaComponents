@@ -6,16 +6,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class CamundaClient {
+public abstract class CamundaClient {
 	
-	protected Logger LOG = Logger.getLogger(CamundaClient.class.getClass().getName());
 	private String camundaServiceEndpointURL = null;
 	private String alternativeEndpoint = null;
 	private boolean needAuthorization = true;
@@ -28,25 +24,23 @@ public class CamundaClient {
 	private Locale defaultLocale = Locale.ENGLISH;
 	private String camundaEngine = "default";
 	private HttpClient cachedHttpClient = null;
-	
-	public void initLogger(String compName) {
-		LOG = Logger.getLogger(this.getClass().getName() + "." + compName);
-	}
+	private Object lock = new Object();
 	
 	public void setHttpClient(HttpClient cachedHttpClient) {
 		this.cachedHttpClient = cachedHttpClient;
 	}
 	
 	public HttpClient getHttpClient() throws Exception {
-		if (cachedHttpClient != null) {
-			return cachedHttpClient;
-		} else {
-			HttpClient httpClient = new HttpClient(camundaServiceEndpointURL, camundaUser, camundaPassword, timeout);
-			httpClient.setDebug(isDebug());
-			httpClient.setMaxRetriesInCaseOfErrors(maxRetriesInCaseOfErrors);
-			httpClient.setWaitMillisAfterError(waitMillisAfterError);
-			cachedHttpClient = httpClient;
-			return httpClient;
+		synchronized (lock) {
+			if (cachedHttpClient != null) {
+				return cachedHttpClient;
+			} else {
+				HttpClient httpClient = new HttpClient(camundaServiceEndpointURL, camundaUser, camundaPassword, timeout);
+				httpClient.setMaxRetriesInCaseOfErrors(maxRetriesInCaseOfErrors);
+				httpClient.setWaitMillisAfterError(waitMillisAfterError);
+				cachedHttpClient = httpClient;
+				return httpClient;
+			}
 		}
 	}
 
@@ -179,22 +173,6 @@ public class CamundaClient {
 		}
 	}
 	
-	public boolean isDebug() {
-		return LOG.isDebugEnabled();
-	}
-	
-	public void setDebug(Boolean debug) {
-		if (debug != null) {
-			if (debug == true) {
-				LOG.setLevel(Level.DEBUG);
-				Logger.getRootLogger().setLevel(Level.DEBUG);
-			} else {
-				LOG.setLevel(Level.INFO);
-				Logger.getRootLogger().setLevel(Level.INFO);
-			}
-		}
-	}
-
 	public String getAlternateEndpoint() {
 		return alternativeEndpoint;
 	}
@@ -220,8 +198,6 @@ public class CamundaClient {
 		}
 		ObjectNode varNode = requestNode.with(varName);
 		if (value != null) {
-			//varNode.put("type", value.getClass().getName());
-			//varNode.set("valueInfo", objectMapper.createObjectNode());
 			if (value instanceof Date) {
 				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 				String strValue = sdf.format((Date) value);

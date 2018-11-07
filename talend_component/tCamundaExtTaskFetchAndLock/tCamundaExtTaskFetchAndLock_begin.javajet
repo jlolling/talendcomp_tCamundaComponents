@@ -18,7 +18,7 @@
 	 CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
     INode node = (INode) codeGenArgument.getArgument();
     String cid = node.getUniqueName();
-	 boolean debug = "true".equals(ElementParameterParser.getValue(node, "__DEBUG__"));
+	 boolean reuseHttpClient = "true".equals(ElementParameterParser.getValue(node, "__REUSE_HTTP_CLIENT__"));
     boolean useAlternateEndpoint = "true".equals(ElementParameterParser.getValue(node, "__USE_ALTERNATE_ENDPOINT__"));
     String alternateEndpoint = ElementParameterParser.getValue(node, "__ALTERNATE_ENDPOINT__");
     if (alternateEndpoint == null || alternateEndpoint.trim().isEmpty()) {
@@ -72,8 +72,6 @@
 	 }
 %>
 	de.jlo.talendcomp.camunda.externaltask.FetchAndLock <%=cid%> = new de.jlo.talendcomp.camunda.externaltask.FetchAndLock();
-	<%=cid%>.initLogger("<%=cid%>");
-	<%=cid%>.setDebug(<%=debug%>);
 <% if (useAlternateEndpoint) { %>
 	<%=cid%>.setAlternateEndpoint(<%=alternateEndpoint%>);
 <% } else { %>

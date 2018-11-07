@@ -12,7 +12,6 @@
 <%
 	 CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
     INode node = (INode) codeGenArgument.getArgument();
-	 boolean debug = "true".equals(ElementParameterParser.getValue(node, "__DEBUG__"));
     String cid = node.getUniqueName();
 	 IConnection conn = null;
 	 List<? extends IConnection> outConns = NodeUtil.getIncomingConnections(node, IConnectionCategory.DATA);
@@ -29,8 +28,6 @@
 	de.jlo.talendcomp.camunda.externaltask.Response <%=cid%> = (de.jlo.talendcomp.camunda.externaltask.Response) globalMap.get("<%=cid%>");
 	if (<%=cid%> == null) {
 		<%=cid%> = new de.jlo.talendcomp.camunda.externaltask.Response((de.jlo.talendcomp.camunda.externaltask.FetchAndLock) globalMap.get("<%=fetchAndLock%>"));
-		<%=cid%>.initLogger("<%=cid%>");
-		<%=cid%>.setDebug(<%=debug%>);
 		globalMap.put("<%=cid%>", <%=cid%>);
 	}
 	try {

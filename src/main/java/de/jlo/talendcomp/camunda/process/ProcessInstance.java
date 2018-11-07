@@ -186,9 +186,9 @@ public class ProcessInstance extends CamundaClient {
 
 	public void start() throws Exception {
 		currentResponseNode = null; // take care we do not use the former response
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("################ Start Process Instance #################");
-		}
+//		if (LOG.isDebugEnabled()) {
+//			LOG.debug("################ Start Process Instance #################");
+//		}
 		if (processDefinitionKey == null) {
 			throw new IllegalStateException("initialize failed: processDefinitionKey is not set");
 		}
@@ -204,20 +204,20 @@ public class ProcessInstance extends CamundaClient {
 		}
 		HttpClient client = getHttpClient();
 		String responseStr = client.post(getProcessDefinitionEndPoint() + processDefinitionKey + "/start", requestPayload, true);
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Response: " + responseStr);
-		}
+//		if (LOG.isDebugEnabled()) {
+//			LOG.debug("Response: " + responseStr);
+//		}
 		if (client.getStatusCode() != 200) {
 			String message = "Start Process Instance POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage() + "\nResponse: " + responseStr;
-			LOG.error(message);
+//			LOG.error(message);
 			throw new Exception(message);
 		}
 		currentRequestVariablesNode = null; // take care we do not use the same variables for the next request
 		try {
 			currentResponseNode = (ObjectNode) objectMapper.readTree(responseStr);
 		} catch (Exception e) {
-			LOG.error("Start Process Instance failed to parse response: " + responseStr);
-			throw e;
+//			LOG.error("Start Process Instance failed to parse response: " + responseStr);
+			throw new Exception("Start process failed: Parsing response failed: response: " + responseStr, e);
 		}
 	}
 	

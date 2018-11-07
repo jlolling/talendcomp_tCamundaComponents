@@ -16,14 +16,14 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class HttpClient {
 	
-	private static Logger LOG = Logger.getLogger(HttpClient.class);
+	private static Logger LOG = LoggerFactory.getLogger(HttpClient.class);
 	private int statusCode = 0;
 	private String statusMessage = null;
 	private int maxRetriesInCaseOfErrors = 0;
@@ -53,9 +53,6 @@ public class HttpClient {
 			}
             CloseableHttpResponse httpResponse = null;
             try {
-            	if (LOG.isDebugEnabled()) {
-            		LOG.debug("Execute request: " + request);
-            	}
             	httpResponse = closableHttpClient.execute(request);
             	statusCode = httpResponse.getStatusLine().getStatusCode();
             	statusMessage = httpResponse.getStatusLine().getReasonPhrase();
@@ -64,6 +61,9 @@ public class HttpClient {
                 	if (Util.isEmpty(responseContent)) {
                 		throw new Exception("Empty response received.");
                 	}
+            	}
+            	if (statusCode > 300) {
+            		throw new Exception("Got status-code: " + statusCode + ", message: " + statusMessage);
             	}
             	httpResponse.close();
             	break;
@@ -170,20 +170,6 @@ public class HttpClient {
 	public void setWaitMillisAfterError(Long waitMillisAfterError) {
 		if (waitMillisAfterError != null) {
 			this.waitMillisAfterError = waitMillisAfterError;
-		}
-	}
-
-	public boolean isDebug() {
-		return LOG.isDebugEnabled();
-	}
-	
-	public void setDebug(Boolean debug) {
-		if (debug != null) {
-			if (debug == true) {
-				LOG.setLevel(Level.DEBUG);
-			} else {
-				LOG.setLevel(Level.INFO);
-			}
 		}
 	}
 

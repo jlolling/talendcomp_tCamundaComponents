@@ -31,7 +31,6 @@ public class Response extends CamundaClient {
 		this.setAlternateEndpoint(fetchAndLock.getAlternateEndpoint());
 		this.setCamundaEngine(fetchAndLock.getCamundaEngine());
 		this.setHttpClient(fetchAndLock.getHttpClient());
-		this.setDebug(fetchAndLock.isDebug());
 	}
 	
 	public void addVariable(String varName, Object value, String pattern, String dataObjectTypName, String type) {
@@ -72,7 +71,7 @@ public class Response extends CamundaClient {
 			if (taskLockExpirationTime != null && new Date().before(taskLockExpirationTime) == false) {
 				currentTaskExpired = true;
 				if (suppressExpiredTasks) {
-					LOG.warn("Task id: " + taskId + " has been expired and will be ignored");
+					System.err.println("Task id: " + taskId + " has been expired and will be ignored");
 				} else {
 					throw new Exception("Lock expiration time exceeded for Task id: " + taskId);
 				}
@@ -96,7 +95,6 @@ public class Response extends CamundaClient {
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/complete", requestPayload, false);
 		if (client.getStatusCode() != 204) {
 			String message = "Complete POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
-			LOG.error(message);
 			throw new Exception(message);
 		}
 	}
@@ -114,7 +112,6 @@ public class Response extends CamundaClient {
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/bpmnError", requestPayload, false);
 		if (client.getStatusCode() != 204) {
 			String message = "BpmnError POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
-			LOG.error(message);
 			throw new Exception(message);
 		}
 	}
@@ -127,7 +124,6 @@ public class Response extends CamundaClient {
 		client.post(getProcessVariablesEndpointURL(processInstanceId), requestPayload, false);
 		if (client.getStatusCode() != 204) {
 			String message = "Update variables POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
-			LOG.error(message);
 			throw new Exception(message);
 		}
 	}
@@ -156,7 +152,6 @@ public class Response extends CamundaClient {
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/failure", requestPayload, false);
 		if (client.getStatusCode() != 204) {
 			String message = "Failure POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
-			LOG.error(message);
 			throw new Exception(message);
 		}
 	}
@@ -167,7 +162,6 @@ public class Response extends CamundaClient {
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/unlock", null, false);
 		if (client.getStatusCode() != 204) {
 			String message = "Unlock POST failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
-			LOG.error(message);
 			throw new Exception(message);
 		}
 	}
