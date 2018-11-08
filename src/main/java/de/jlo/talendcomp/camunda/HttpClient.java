@@ -5,13 +5,18 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -30,6 +35,7 @@ public class HttpClient {
 	private int currentAttempt = 0;
 	private long waitMillisAfterError = 1000l;
 	private CloseableHttpClient closableHttpClient = null;
+	private HttpClientContext context = null;
 	
 	public HttpClient(String urlStr, String user, String password, int timeout) throws Exception {
 		closableHttpClient = createCloseableClient(urlStr, user, password, timeout);
@@ -53,7 +59,11 @@ public class HttpClient {
 			}
             CloseableHttpResponse httpResponse = null;
             try {
-            	httpResponse = closableHttpClient.execute(request);
+            	if (context != null) {
+                	httpResponse = closableHttpClient.execute(request, context);
+            	} else {
+                	httpResponse = closableHttpClient.execute(request);
+            	}
             	statusCode = httpResponse.getStatusLine().getStatusCode();
             	statusMessage = httpResponse.getStatusLine().getReasonPhrase();
             	if (expectResponse || (statusCode != 204 && statusCode != 205)) {
@@ -107,15 +117,22 @@ public class HttpClient {
             if (user != null && user.trim().isEmpty() == false) {
         		URL url = new URL(urlStr);
                 credsProvider.setCredentials(
-                        new AuthScope(url.getHost(), url.getPort()),
+                        AuthScope.ANY,
                         new UsernamePasswordCredentials(user, password));
                 RequestConfig requestConfig = RequestConfig.custom()
                         .setSocketTimeout(timeout)
                         .setConnectTimeout(timeout)
                         .setConnectionRequestTimeout(timeout)
                         .setRedirectsEnabled(true)
-                        .setRelativeRedirectsAllowed(true)
+                        .setRelativeRedirectsAllowed(false)
+                        .setAuthenticationEnabled(true)
                         .build();
+                AuthCache authCache = new BasicAuthCache();
+                HttpHost httpHost = new HttpHost(url.getHost(), url.getPort());
+                authCache.put(httpHost, new BasicScheme());
+                context = HttpClientContext.create();
+                context.setCredentialsProvider(credsProvider);
+                context.setAuthCache(authCache);
                 CloseableHttpClient client = HttpClients.custom()
                         .setDefaultCredentialsProvider(credsProvider)
                         .setDefaultRequestConfig(requestConfig)
