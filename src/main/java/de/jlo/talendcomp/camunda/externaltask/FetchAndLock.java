@@ -87,7 +87,7 @@ public class FetchAndLock extends CamundaClient {
 			HttpClient client = getHttpClient();
 			String responseStr = client.post(getExternalTaskEndpointURL() + "/fetchAndLock", requestPayload, true);
 			if (client.getStatusCode() != 200) {
-				String message = "FetchAndLock POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage() + "\nResponse: " + responseStr;
+				String message = "Worker " + workerId + ": FetchAndLock POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage() + "\nResponse: " + responseStr;
 				throw new Exception(message);
 			}
 			try {

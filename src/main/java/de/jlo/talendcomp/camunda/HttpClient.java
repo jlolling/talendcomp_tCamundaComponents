@@ -63,7 +63,7 @@ public class HttpClient {
                 	}
             	}
             	if (statusCode > 300) {
-            		throw new Exception("Got status-code: " + statusCode + ", message: " + statusMessage);
+            		throw new Exception("Got status-code: " + statusCode + ", message: " + statusMessage + ", response: " + responseContent);
             	}
             	httpResponse.close();
             	break;
