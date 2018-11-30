@@ -11,6 +11,7 @@
 	String cid = node.getUniqueName();	
 %>
 	} // close while loop for <%=cid%>
+	<%=cid%>.unregisterMBean();
 	globalMap.put("<%=cid%>_NB_FETCH_REQUESTS", <%=cid%>.getNumberFetches());
 	globalMap.put("<%=cid%>_NB_FETCH_REQUESTS_WITH_TASKS", <%=cid%>.getNumberSucessfulFetches()); 
 	globalMap.put("<%=cid%>_NB_TASKS_TOTAL", <%=cid%>.getNumberTasksReceived());

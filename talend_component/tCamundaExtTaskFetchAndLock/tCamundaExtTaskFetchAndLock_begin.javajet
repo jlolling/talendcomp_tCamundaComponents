@@ -70,6 +70,7 @@
     		   listColumns = metadata.getListColumns();
 		  }
 	 }
+    boolean enableJMX = "true".equals(ElementParameterParser.getValue(node, "__ENABLE_JMX__"));
 %>
 	de.jlo.talendcomp.camunda.externaltask.FetchAndLock <%=cid%> = new de.jlo.talendcomp.camunda.externaltask.FetchAndLock();
 <% if (useAlternateEndpoint) { %>
@@ -119,8 +120,17 @@
 	<%=cid%>.addVariable(<%=fieldLabel%>);
 <% 	}
 	} %>
-	globalMap.put("httpClient_<%=cid%>", <%=cid%>.getHttpClient());
 	globalMap.put("<%=cid%>", <%=cid%>);
+<%	if (enableJMX) { %>
+	try {
+		<%=cid%>.registerMBean();
+	} catch (Exception e) {
+		globalMap.put("<%=cid%>_ERROR_MESSAGE", "Enable JMX failed: " + e.getMessage());
+		// we will not let the job die, JMX support is not essential
+		System.err.println("Enable JMX support failed: " + e.getMessage());
+		e.printStackTrace();
+	}
+<%	} %>
 <%	if (returnAllTasksCurrentlyFetched) { %>
 	while (true) {
 		try {

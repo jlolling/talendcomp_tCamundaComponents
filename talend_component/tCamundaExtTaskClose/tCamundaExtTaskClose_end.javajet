@@ -11,7 +11,7 @@
 	String cid = node.getUniqueName();	
     String fetchAndLock = ElementParameterParser.getValue(node, "__FETCH_AND_LOCK_COMPONENT__");
 %>
-	de.jlo.talendcomp.camunda.HttpClient <%=cid%> = (de.jlo.talendcomp.camunda.HttpClient) globalMap.get("httpClient_<%=fetchAndLock%>");
-	if (<%=cid%> != null) {
-		<%=cid%>.close();
+	de.jlo.talendcomp.camunda.externaltask.FetchAndLock fetchAndLock_<%=cid%> = (de.jlo.talendcomp.camunda.externaltask.FetchAndLock) globalMap.get("<%=fetchAndLock%>");
+	if (fetchAndLock_<%=cid%> != null) {
+		fetchAndLock_<%=cid%>.close();
 	}

@@ -1,11 +1,15 @@
 package de.jlo.talendcomp.camunda.externaltask;
 
+import java.lang.management.ManagementFactory;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -15,6 +19,7 @@ import de.jlo.talendcomp.camunda.CamundaClient;
 import de.jlo.talendcomp.camunda.HttpClient;
 import de.jlo.talendcomp.camunda.TypeUtil;
 import de.jlo.talendcomp.camunda.Util;
+import de.jlo.talendcomp.camunda.jmx.CamundaExtTaskInfo;
 
 public class FetchAndLock extends CamundaClient {
 	
@@ -38,6 +43,8 @@ public class FetchAndLock extends CamundaClient {
 	private boolean returnAllTasksCurrentlyFetched = false;
 	private boolean deserializeFetchedJsonValues = false;
 	private boolean reuseHttpClientForAllRequests = false;
+	private CamundaExtTaskInfo mbeanCamundaExtTaskInfo = null;
+	private long taskProcessingStartTime = 0l;
 	
 	public FetchAndLock() {
 		startTime = System.currentTimeMillis();
@@ -85,10 +92,20 @@ public class FetchAndLock extends CamundaClient {
 				setHttpClient(null);
 			}
 			HttpClient client = getHttpClient();
+			long startTime = System.currentTimeMillis();
 			String responseStr = client.post(getExternalTaskEndpointURL() + "/fetchAndLock", requestPayload, true);
+			int countRetries = client.getCurrentAttempt();
+			long fetchDuration = System.currentTimeMillis() - startTime;
 			if (client.getStatusCode() != 200) {
-				String message = "Worker " + workerId + ": FetchAndLock POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage() + "\nResponse: " + responseStr;
-				throw new Exception(message);
+				String errorMessage = "Worker " + workerId + ": FetchAndLock POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage() + "\nResponse: " + responseStr;
+				if (mbeanCamundaExtTaskInfo != null) {
+					mbeanCamundaExtTaskInfo.addFetchAndLock(fetchDuration, countRetries, errorMessage);
+				}
+				throw new Exception(errorMessage);
+			} else {
+				if (mbeanCamundaExtTaskInfo != null) {
+					mbeanCamundaExtTaskInfo.addFetchAndLock(fetchDuration, countRetries, null);
+				}
 			}
 			try {
 				fetchedTaskArray = (ArrayNode) objectMapper.readTree(responseStr);
@@ -97,11 +114,12 @@ public class FetchAndLock extends CamundaClient {
 			}
 			numberFetches++;
 			if (fetchedTaskArray != null && fetchedTaskArray.size() > 0) {
+				mbeanCamundaExtTaskInfo.addTaskFetched(fetchedTaskArray.size());
 				numberSucessfulFetches++;
 				numberTasksReceived = numberTasksReceived + fetchedTaskArray.size();
 				break;
 			}
-		}
+		}		
 		if (fetchedTaskArray != null) {
 			return fetchedTaskArray.size();
 		} else {
@@ -178,6 +196,7 @@ public class FetchAndLock extends CamundaClient {
 		}
 		fetchAndLock();
 		if (fetchedTaskArray != null && fetchedTaskArray.size() > 0) {
+			taskProcessingStartTime = System.currentTimeMillis();
 			return true;
 		} else {
 			return false;
@@ -615,6 +634,47 @@ public class FetchAndLock extends CamundaClient {
 		if (reuseHttpClientForAllRequests != null) {
 			this.reuseHttpClientForAllRequests = reuseHttpClientForAllRequests;
 		}
+	}
+	
+	private ObjectName beanName = null;
+
+	public void registerMBean() throws Exception {
+		mbeanCamundaExtTaskInfo = new CamundaExtTaskInfo();
+		mbeanCamundaExtTaskInfo.setFetchAndLock(this);
+		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+		beanName = new ObjectName("de.jlo.talendcomp.camundExtTask:type="+CamundaExtTaskInfo.class.getSimpleName() + ",topic=" + topicName + ",workerId=" + workerId);
+		if (mbs.isRegistered(beanName) == false) {
+			mbs.registerMBean(mbeanCamundaExtTaskInfo, beanName);
+		}
+	}
+	
+	public void unregisterMBean() {
+		if (mbeanCamundaExtTaskInfo != null) {
+			mbeanCamundaExtTaskInfo.stop();
+			mbeanCamundaExtTaskInfo.setFetchAndLock(null);
+		}
+		if (beanName != null) {
+			MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+			try {
+				mbs.unregisterMBean(beanName);
+			} catch (Exception e) {
+				System.err.println("Unable to unregister mbean: " + e.getMessage());
+			}
+		}
+	}
+	
+	public CamundaExtTaskInfo getCamundaExtTaskInfo() {
+		return mbeanCamundaExtTaskInfo;
+	}
+	
+	@Override
+	public void close() {
+		unregisterMBean();
+		super.close();
+	}
+
+	public long getTaskProcessingStartTime() {
+		return taskProcessingStartTime;
 	}
 	
 }

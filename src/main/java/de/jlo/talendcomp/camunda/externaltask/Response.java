@@ -8,6 +8,7 @@ import com.jayway.jsonpath.internal.Utils;
 import de.jlo.talendcomp.camunda.CamundaClient;
 import de.jlo.talendcomp.camunda.HttpClient;
 import de.jlo.talendcomp.camunda.Util;
+import de.jlo.talendcomp.camunda.jmx.CamundaExtTaskInfo;
 
 public class Response extends CamundaClient {
 	
@@ -21,6 +22,7 @@ public class Response extends CamundaClient {
 	private boolean checkLockExpiration = true;
 	private boolean suppressExpiredTasks = false;
 	private boolean currentTaskExpired = false;
+	private CamundaExtTaskInfo mbeanCamundaExtTaskInfo = null;
 	
 	public Response(FetchAndLock fetchAndLock) throws Exception {
 		if (fetchAndLock == null) {
@@ -31,6 +33,7 @@ public class Response extends CamundaClient {
 		this.setAlternateEndpoint(fetchAndLock.getAlternateEndpoint());
 		this.setCamundaEngine(fetchAndLock.getCamundaEngine());
 		this.setHttpClient(fetchAndLock.getHttpClient());
+		this.mbeanCamundaExtTaskInfo = fetchAndLock.getCamundaExtTaskInfo();
 	}
 	
 	public void addVariable(String varName, Object value, String pattern, String dataObjectTypName, String type) {
@@ -79,7 +82,16 @@ public class Response extends CamundaClient {
 		}
 	}
 	
+	private void notifiyFinishedTask() {
+		if (mbeanCamundaExtTaskInfo != null) {
+			long taskProcessingStopTime = System.currentTimeMillis();
+			long taskProcessingDuration = taskProcessingStopTime - fetchAndLock.getCurrentTaskStartTime();
+			mbeanCamundaExtTaskInfo.addTaskFinished(taskProcessingDuration);
+		}
+	}
+	
 	public void complete() throws Exception {
+		notifiyFinishedTask();
 		currentTaskExpired = false;
 		String workerId = fetchAndLock.getWorkerId();
 		if (workerId == null) {
@@ -92,14 +104,25 @@ public class Response extends CamundaClient {
 		requestPayload.set("variables", currentVariablesNode);
 		currentVariablesNode = null; // set node to null to force creating a new one for the next complete call
 		HttpClient client = getHttpClient();
+		long startTime = System.currentTimeMillis();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/complete", requestPayload, false);
+		int countRetries = client.getCurrentAttempt();
+		long duration = System.currentTimeMillis() - startTime;
 		if (client.getStatusCode() != 204) {
-			String message = "Complete POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
-			throw new Exception(message);
+			String errorMessage = "Complete POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
+			if (mbeanCamundaExtTaskInfo != null) {
+				mbeanCamundaExtTaskInfo.addComplete(duration, countRetries, errorMessage);
+			}
+			throw new Exception(errorMessage);
+		} else {
+			if (mbeanCamundaExtTaskInfo != null) {
+				mbeanCamundaExtTaskInfo.addComplete(duration, countRetries, null);
+			}
 		}
 	}
 	
 	public void bpmnError(String errorCode) throws Exception {
+		notifiyFinishedTask();
 		String workerId = fetchAndLock.getWorkerId();
 		if (workerId == null) {
 			throw new IllegalStateException("workerId not provided by the fetchAndLock component");
@@ -129,6 +152,7 @@ public class Response extends CamundaClient {
 	}
 
 	public void failure(String errorMessage, String errorDetails, Integer retries, Number retryTimeout) throws Exception {
+		notifiyFinishedTask();
 		String workerId = fetchAndLock.getWorkerId();
 		if (workerId == null) {
 			throw new IllegalStateException("workerId not provided by the fetchAndLock component");
@@ -157,6 +181,7 @@ public class Response extends CamundaClient {
 	}
 	
 	public void unlock() throws Exception {
+		notifiyFinishedTask();
 		setupTaskId();
 		HttpClient client = getHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/unlock", null, false);

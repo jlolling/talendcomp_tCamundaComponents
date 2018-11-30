@@ -84,7 +84,7 @@ public abstract class CamundaClient {
 		}
 	}
 
-	protected String getExternalTaskEndpointURL() {
+	public String getExternalTaskEndpointURL() {
 		if (alternativeEndpoint != null) {
 			return alternativeEndpoint;
 		} else if (camundaServiceEndpointURL != null) {
