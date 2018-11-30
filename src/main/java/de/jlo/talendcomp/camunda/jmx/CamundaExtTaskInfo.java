@@ -234,12 +234,6 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 	}
 
 	@Override
-	public String[] getLastFetchErrorResponses() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public int getCompletsCount() {
 		return totalComplets;
 	}
@@ -313,12 +307,6 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 	@Override
 	public long getCompleteDurationTotal() {
 		return totalCompleteDuration;
-	}
-
-	@Override
-	public String[] getLastCompleteErrorResponses() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override

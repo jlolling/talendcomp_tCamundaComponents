@@ -34,8 +34,6 @@ public interface CamundaExtTaskInfoMXBean {
 
 	public long getFetchAndLockDurationTotal();
 
-	public String[] getLastFetchErrorResponses();
-
 	public int getCompletsCount();
 	
 	public int getCompletsCountPeriod();
@@ -71,8 +69,6 @@ public interface CamundaExtTaskInfoMXBean {
 	public double getTaskProcessingDurationAvg();
 
 	public double getTaskProcessingDurationAvgPeriod();
-
-	public String[] getLastCompleteErrorResponses();
 
 	public int getBpmnErrorCount();
 	
