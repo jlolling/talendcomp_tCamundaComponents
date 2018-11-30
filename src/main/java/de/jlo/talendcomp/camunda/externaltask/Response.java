@@ -133,6 +133,7 @@ public class Response extends CamundaClient {
 		requestPayload.put("errorCode", errorCode);
 		HttpClient client = getHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/bpmnError", requestPayload, false);
+		mbeanCamundaExtTaskInfo.addBpmnError();
 		if (client.getStatusCode() != 204) {
 			String message = "BpmnError POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
 			throw new Exception(message);
@@ -174,6 +175,7 @@ public class Response extends CamundaClient {
 		}
 		HttpClient client = getHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/failure", requestPayload, false);
+		mbeanCamundaExtTaskInfo.addFailure();
 		if (client.getStatusCode() != 204) {
 			String message = "Failure POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
 			throw new Exception(message);

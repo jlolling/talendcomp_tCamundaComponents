@@ -129,11 +129,11 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 		}
 	}
 
-	public void addFailure(String errorMessage) {
+	public void addFailure() {
 		this.countFailures++;
 	}
 
-	public void addBpmnError(String errorCode) {
+	public void addBpmnError() {
 		this.countBpmnErrors++;
 	}
 
