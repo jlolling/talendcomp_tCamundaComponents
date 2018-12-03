@@ -24,21 +24,19 @@ public class CamundaClientTest {
 	public void testFetchAndLock() throws Exception {
 		FetchAndLock cc = new FetchAndLock();
 		globalMap.put("comp1", cc);
-		cc.setCamundaServiceURL("http://camundatest02.gvl.local:10080");
-		cc.setCamundaUser("talend_prod");
-		cc.setCamundaPassword("8CR!Sy%AT?TVYE476XeB");
+		cc.setCamundaServiceURL("http://localhost:8080");
 		cc.setWorkerId("camundaClientTest_" + System.currentTimeMillis());
 		cc.setNumberTaskToFetch(1);
-		cc.setMaxRetriesInCaseOfErrors(4);
-		cc.setTopicName("calculateConflict");
-		cc.addVariable("calculateConflict");
+		cc.setMaxRetriesInCaseOfErrors(0);
+		cc.setTopicName("testTopic");
+		cc.addVariable("productId");
 		cc.setLockDuration(5000);
 		cc.setTimeBetweenFetches(1000);
 		cc.setWaitMillisAfterError(10000);
 		cc.setStopTime(60);
 		while (cc.nextTask()) {
 			System.out.println(cc.getCurrentTaskId());
-			System.out.println(cc.getCurrentTaskVariableValueAsObject("calculateConflict", false, false));
+			System.out.println(cc.getCurrentTaskVariableValueAsObject("productId", false, false));
 		}
 		Assert.assertTrue(true);
 	}

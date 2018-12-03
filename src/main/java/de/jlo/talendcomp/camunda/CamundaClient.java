@@ -10,6 +10,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import de.jlo.talendcomp.camunda.jmx.CamundaExtTaskInfo;
+
 public abstract class CamundaClient {
 	
 	private String camundaServiceEndpointURL = null;
@@ -25,6 +27,7 @@ public abstract class CamundaClient {
 	private String camundaEngine = "default";
 	private HttpClient cachedHttpClient = null;
 	private Object lock = new Object();
+	protected CamundaExtTaskInfo mbeanCamundaExtTaskInfo = null;
 	
 	public void setHttpClient(HttpClient cachedHttpClient) {
 		this.cachedHttpClient = cachedHttpClient;

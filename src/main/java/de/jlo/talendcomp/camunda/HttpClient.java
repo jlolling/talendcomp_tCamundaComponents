@@ -72,26 +72,35 @@ public class HttpClient {
                 		throw new Exception("Empty response received.");
                 	}
             	}
-            	if (statusCode > 300) {
-            		throw new Exception("Got status-code: " + statusCode + ", message: " + statusMessage + ", response: " + responseContent);
+            	try {
+                	httpResponse.close();
+                	httpResponse = null;
+            	} catch (Exception ce) {
+            		// ignore
             	}
-            	httpResponse.close();
+            	if (statusCode > 300) {
+            		throw new Exception("Got status-code: " + statusCode + ", reason-phrase: " + statusMessage + ", response: " + responseContent);
+            	}
             	break;
-            } catch (Exception e) {
-            	if (currentAttempt <= maxRetriesInCaseOfErrors) {
+            } catch (Throwable e) {
+            	if (currentAttempt < maxRetriesInCaseOfErrors) {
                 	// this can happen, we try it again
-                	LOG.warn("POST request: " + request.getURI() + " failed (" + (currentAttempt + 1) + ". attempt). Waiting " + waitMillisAfterError + "ms and retry request.", e);
+                	LOG.warn("POST request: " + request.getURI() + " failed (" + (currentAttempt + 1) + ". attempt, " + (maxRetriesInCaseOfErrors - currentAttempt) + " retries left). \n   Payload: " + EntityUtils.toString(request.getEntity()) + "\n   Waiting " + waitMillisAfterError + "ms and retry request.", e);
                 	Thread.sleep(waitMillisAfterError);
             	} else {
-                	LOG.error("POST request: " + request.getURI() + " failed.", e);
-                	throw new Exception("POST request: " + request.getURI() + " failed.", e);
+//                	LOG.error("POST request: " + request.getURI() + " failed (No retry left, max: " + maxRetriesInCaseOfErrors + "). \n   Payload: " + EntityUtils.toString(request.getEntity()), e);
+                	throw new Exception("POST request: " + request.getURI() + " failed. No retry left, max: " + maxRetriesInCaseOfErrors + ".\n   Payload: " + EntityUtils.toString(request.getEntity()), e);
             	}
             } finally {
             	if (httpResponse != null) {
-                    httpResponse.close();
+                	try {
+                    	httpResponse.close();
+                	} catch (Exception ce) {
+                		// ignore
+                	}
             	}
             }
-		}
+		} // for
         return responseContent;
 	}
 

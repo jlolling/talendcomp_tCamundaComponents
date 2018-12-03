@@ -10,11 +10,14 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 	
 	private long refreshTime = 10000l;
 	private long lastMeasured = 0l;
-	private int countFetchAndLocks = 0;
-	private int countFetchAndLocksLast = 0;
-	private int countFetchAndLocksDiff = 0;
+	private int totalFetchAndLocks = 0;
+	private int totalFetchAndLocksLast = 0;
+	private int totalFetchAndLocksDiff = 0;
 	private int minFetchAndLockRetries = 0;
 	private int maxFetchAndLockRetries = 0;
+	private int totalFetchAndLocksWithRetries = 0;
+	private int totalFetchAndLocksWithRetriesDiff = 0;
+	private int totalFetchAndLocksWithRetriesLast = 0;
 	private int totalFetchAndLockRetries = 0;
 	private int totalFetchAndLockRetriesLast = 0;
 	private int totalFetchAndLockRetriesDiff = 0;
@@ -31,6 +34,9 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 	private int totalComplets = 0;
 	private int totalCompletsLast = 0;
 	private int totalCompletsDiff = 0;
+	private int totalCompletsWithRetries = 0;
+	private int totalCompletsWithRetriesDiff = 0;
+	private int totalCompletsWithRetriesLast = 0;
 	private int minCompleteRetries = 0;
 	private int maxCompleteRetries = 0;
 	private int totalCompleteRetries = 0;
@@ -55,6 +61,7 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 	private int countTotalFinished = 0;
 	private int countTotalFinishedLast = 0;
 	private int countTotalFinishedDiff = 0;
+	private int totalRetries = 0;
 	private FetchAndLock fetchAndLock = null;
 	private Timer timer = null;
 	
@@ -70,12 +77,16 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 	}
 	
 	private void snapshot() {
-		countFetchAndLocksDiff = countFetchAndLocks - countFetchAndLocksLast;
-		countFetchAndLocksLast = countFetchAndLocks;
+		totalFetchAndLocksDiff = totalFetchAndLocks - totalFetchAndLocksLast;
+		totalFetchAndLocksLast = totalFetchAndLocks;
+		totalFetchAndLocksWithRetriesDiff = totalFetchAndLocksWithRetries - totalFetchAndLocksWithRetriesLast;
+		totalFetchAndLocksWithRetriesLast = totalFetchAndLocksWithRetries;
 		totalFetchAndLockDurationDiff = totalFetchAndLockDuration - totalFetchAndLockDurationLast;
 		totalFetchAndLockDurationLast = totalFetchAndLockDuration;
 		totalCompletsDiff = totalComplets - totalCompletsLast;
 		totalCompletsLast = totalComplets;
+		totalCompletsWithRetriesDiff = totalCompletsWithRetries - totalCompletsWithRetriesLast;
+		totalCompletsWithRetriesLast = totalCompletsWithRetries;
 		totalCompleteRetriesDiff = totalCompleteRetries - totalCompleteRetriesLast;
 		totalCompleteRetriesLast = totalCompleteRetries;
 		totalCompleteDurationDiff = totalCompleteDuration - totalCompleteDurationLast;
@@ -105,22 +116,44 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 		this.fetchAndLock = fetchAndLock;
 	}
 	
-	public void addFetchAndLock(long duration, int countRetries, String errorMessage) {
+	public void addFetchAndLock(long duration, int countRetries) {
+		this.totalFetchAndLocks++;
+		if (countRetries > 0) {
+			this.totalFetchAndLocksWithRetries++;
+		}
 		this.totalFetchAndLockDuration += duration;
-		this.totalFetchAndLockRetries += countRetries;
-		this.countFetchAndLocks++;
 		if (maxFetchAndLockDuration < duration) {
 			maxFetchAndLockDuration = duration;
 		}
 		if (minFetchAndLockDuration == 0l || minFetchAndLockDuration > duration) {
 			minFetchAndLockDuration = duration;
 		}
+		this.totalFetchAndLockRetries += countRetries;
+		if (maxFetchAndLockRetries < countRetries) {
+			maxFetchAndLockRetries = countRetries;
+		}
+		if (minFetchAndLockRetries == 0l || minFetchAndLockRetries > countRetries) {
+			minFetchAndLockRetries = countRetries;
+		}
 	}
 	
-	public void addComplete(long duration, int countRetries, String errorMessage) {
-		this.totalCompleteDuration += duration;
-		this.totalCompleteRetries += countRetries;
+	public void addRetry() {
+		this.totalRetries++;
+	}
+	
+	public void addComplete(long duration, int countRetries) {
 		this.totalComplets++;
+		if (countRetries > 0) {
+			this.totalCompletsWithRetries++;
+		}
+		this.totalCompleteDuration += duration;
+		if (maxCompleteRetries < countRetries) {
+			maxCompleteRetries = countRetries;
+		}
+		if (minCompleteRetries == 0l || minCompleteRetries > countRetries) {
+			minCompleteRetries = countRetries;
+		}
+		this.totalCompleteRetries += countRetries;
 		if (maxCompleteDuration < duration) {
 			maxCompleteDuration = duration;
 		}
@@ -138,8 +171,8 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 	}
 
 	public void addTaskFinished(long duration) {
-		totalTaskProcessingDuration += duration;
 		this.countTotalFinished++;
+		totalTaskProcessingDuration += duration;
 		if (maxTaskProcessingDuration < duration) {
 			maxTaskProcessingDuration = duration;
 		}
@@ -160,7 +193,7 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 	
 	@Override
 	public int getFetchAndLocksCount() {
-		return countFetchAndLocks;
+		return totalFetchAndLocks;
 	}
 
 	@Override
@@ -175,8 +208,8 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 
 	@Override
 	public double getFetchAndLockRetriesAvg() {
-		if (countFetchAndLocks > 0) {
-			return ((double) totalFetchAndLockRetries) / ((double) countFetchAndLocks);
+		if (totalFetchAndLocksWithRetries > 0) {
+			return ((double) totalFetchAndLockRetries) / ((double) totalFetchAndLocksWithRetries);
 		} else {
 			return 0d;
 		}
@@ -184,8 +217,8 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 
 	@Override
 	public double getFetchAndLockRetriesAvgPeriod() {
-		if (countFetchAndLocksDiff > 0) {
-			return ((double) totalFetchAndLockRetriesDiff) / ((double) countFetchAndLocksDiff);
+		if (totalFetchAndLocksWithRetriesDiff > 0) {
+			return ((double) totalFetchAndLockRetriesDiff) / ((double) totalFetchAndLocksWithRetriesDiff);
 		} else {
 			return 0d;
 		}
@@ -217,8 +250,8 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 
 	@Override
 	public double getFetchAndLockDurationAvg() {
-		if (countFetchAndLocks > 0l) {
-			return ((double) totalFetchAndLockDuration) / ((double) countFetchAndLocks);
+		if (totalFetchAndLocks > 0l) {
+			return ((double) totalFetchAndLockDuration) / ((double) totalFetchAndLocks);
 		} else {
 			return 0l;
 		}
@@ -226,8 +259,8 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 
 	@Override
 	public double getFetchAndLockDurationAvgPeriod() {
-		if (countFetchAndLocksDiff > 0l) {
-			return ((double) totalFetchAndLockDurationDiff) / ((double) countFetchAndLocksDiff);
+		if (totalFetchAndLocksDiff > 0l) {
+			return ((double) totalFetchAndLockDurationDiff) / ((double) totalFetchAndLocksDiff);
 		} else {
 			return 0l;
 		}
@@ -255,8 +288,8 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 
 	@Override
 	public double getCompleteRetriesAvg() {
-		if (totalComplets > 0) {
-			return ((double) totalCompleteRetries) / ((double) totalComplets);
+		if (totalCompletsWithRetries > 0) {
+			return ((double) totalCompleteRetries) / ((double) totalCompletsWithRetries);
 		} else {
 			return 0;
 		}
@@ -264,8 +297,8 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 
 	@Override
 	public double getCompleteRetriesAvgPeriod() {
-		if (totalCompletsDiff > 0) {
-			return ((double) totalCompleteRetriesDiff) / ((double) totalCompletsDiff);
+		if (totalCompletsWithRetriesDiff > 0) {
+			return ((double) totalCompleteRetriesDiff) / ((double) totalCompletsWithRetriesDiff);
 		} else {
 			return 0;
 		}
@@ -435,8 +468,8 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 
 	@Override
 	public double getFetchedTasksAvg() {
-		if (countFetchAndLocks > 0) {
-			return ((double) totalFetchedTasks) / ((double) countFetchAndLocks);
+		if (totalFetchAndLocks > 0) {
+			return ((double) totalFetchedTasks) / ((double) totalFetchAndLocks);
 		} else {
 			return 0d;
 		}
@@ -444,8 +477,8 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 
 	@Override
 	public double getFetchedTasksAvgPeriod() {
-		if (countFetchAndLocksDiff > 0) {
-			return ((double) totalFetchedTasksDiff) / ((double) countFetchAndLocksDiff);
+		if (totalFetchAndLocksDiff > 0) {
+			return ((double) totalFetchedTasksDiff) / ((double) totalFetchAndLocksDiff);
 		} else {
 			return 0d;
 		}

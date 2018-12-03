@@ -110,13 +110,10 @@ public class Response extends CamundaClient {
 		long duration = System.currentTimeMillis() - startTime;
 		if (client.getStatusCode() != 204) {
 			String errorMessage = "Complete POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
-			if (mbeanCamundaExtTaskInfo != null) {
-				mbeanCamundaExtTaskInfo.addComplete(duration, countRetries, errorMessage);
-			}
 			throw new Exception(errorMessage);
 		} else {
 			if (mbeanCamundaExtTaskInfo != null) {
-				mbeanCamundaExtTaskInfo.addComplete(duration, countRetries, null);
+				mbeanCamundaExtTaskInfo.addComplete(duration, countRetries);
 			}
 		}
 	}
@@ -133,11 +130,11 @@ public class Response extends CamundaClient {
 		requestPayload.put("errorCode", errorCode);
 		HttpClient client = getHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/bpmnError", requestPayload, false);
+//		if (client.getStatusCode() != 204) {
+//			String message = "BpmnError POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
+//			throw new Exception(message);
+//		}
 		mbeanCamundaExtTaskInfo.addBpmnError();
-		if (client.getStatusCode() != 204) {
-			String message = "BpmnError POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
-			throw new Exception(message);
-		}
 	}
 	
 	public void updateProcessVariables() throws Exception {
@@ -146,10 +143,10 @@ public class Response extends CamundaClient {
 		ObjectNode requestPayload = objectMapper.createObjectNode();
 		requestPayload.set("modifications", currentVariablesNode);
 		client.post(getProcessVariablesEndpointURL(processInstanceId), requestPayload, false);
-		if (client.getStatusCode() != 204) {
-			String message = "Update variables POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
-			throw new Exception(message);
-		}
+//		if (client.getStatusCode() != 204) {
+//			String message = "Update variables POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
+//			throw new Exception(message);
+//		}
 	}
 
 	public void failure(String errorMessage, String errorDetails, Integer retries, Number retryTimeout) throws Exception {
@@ -175,11 +172,11 @@ public class Response extends CamundaClient {
 		}
 		HttpClient client = getHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/failure", requestPayload, false);
+//		if (client.getStatusCode() != 204) {
+//			String message = "Failure POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
+//			throw new Exception(message);
+//		}
 		mbeanCamundaExtTaskInfo.addFailure();
-		if (client.getStatusCode() != 204) {
-			String message = "Failure POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
-			throw new Exception(message);
-		}
 	}
 	
 	public void unlock() throws Exception {
@@ -187,10 +184,10 @@ public class Response extends CamundaClient {
 		setupTaskId();
 		HttpClient client = getHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/unlock", null, false);
-		if (client.getStatusCode() != 204) {
-			String message = "Unlock POST failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
-			throw new Exception(message);
-		}
+//		if (client.getStatusCode() != 204) {
+//			String message = "Unlock POST failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
+//			throw new Exception(message);
+//		}
 	}
 
 	public String getTaskId() {

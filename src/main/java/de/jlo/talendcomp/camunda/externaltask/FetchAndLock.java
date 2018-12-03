@@ -43,7 +43,6 @@ public class FetchAndLock extends CamundaClient {
 	private boolean returnAllTasksCurrentlyFetched = false;
 	private boolean deserializeFetchedJsonValues = false;
 	private boolean reuseHttpClientForAllRequests = false;
-	private CamundaExtTaskInfo mbeanCamundaExtTaskInfo = null;
 	private long taskProcessingStartTime = 0l;
 	
 	public FetchAndLock() {
@@ -96,17 +95,20 @@ public class FetchAndLock extends CamundaClient {
 			String responseStr = client.post(getExternalTaskEndpointURL() + "/fetchAndLock", requestPayload, true);
 			int countRetries = client.getCurrentAttempt();
 			long fetchDuration = System.currentTimeMillis() - startTime;
-			if (client.getStatusCode() != 200) {
-				String errorMessage = "Worker " + workerId + ": FetchAndLock POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage() + "\nResponse: " + responseStr;
-				if (mbeanCamundaExtTaskInfo != null) {
-					mbeanCamundaExtTaskInfo.addFetchAndLock(fetchDuration, countRetries, errorMessage);
-				}
-				throw new Exception(errorMessage);
-			} else {
-				if (mbeanCamundaExtTaskInfo != null) {
-					mbeanCamundaExtTaskInfo.addFetchAndLock(fetchDuration, countRetries, null);
-				}
+			if (mbeanCamundaExtTaskInfo != null) {
+				mbeanCamundaExtTaskInfo.addFetchAndLock(fetchDuration, countRetries);
 			}
+//			if (client.getStatusCode() != 200) {
+//				String errorMessage = "Worker " + workerId + ": FetchAndLock POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage() + "\nResponse: " + responseStr;
+//				if (mbeanCamundaExtTaskInfo != null) {
+//					mbeanCamundaExtTaskInfo.addFetchAndLock(fetchDuration, countRetries);
+//				}
+//				throw new Exception(errorMessage);
+//			} else {
+//				if (mbeanCamundaExtTaskInfo != null) {
+//					mbeanCamundaExtTaskInfo.addFetchAndLock(fetchDuration, countRetries);
+//				}
+//			}
 			try {
 				fetchedTaskArray = (ArrayNode) objectMapper.readTree(responseStr);
 			} catch (Exception e) {
@@ -195,6 +197,7 @@ public class FetchAndLock extends CamundaClient {
 			return false;
 		}
 		fetchAndLock();
+		currentTaskStartTime = System.currentTimeMillis();
 		if (fetchedTaskArray != null && fetchedTaskArray.size() > 0) {
 			taskProcessingStartTime = System.currentTimeMillis();
 			return true;
@@ -204,7 +207,6 @@ public class FetchAndLock extends CamundaClient {
 	}
 
 	public boolean nextTask() throws Exception {
-		currentTaskStartTime = 0;
 		currentRawTask = null;
 		if (Thread.currentThread().isInterrupted()) {
 			return false;
@@ -212,10 +214,10 @@ public class FetchAndLock extends CamundaClient {
 		if (fetchedTaskArray == null || currentTaskIndex == fetchedTaskArray.size()) {
 			fetchAndLock();
 		}
+		currentTaskStartTime = System.currentTimeMillis();
 		if (fetchedTaskArray != null) {
 			if (currentTaskIndex < fetchedTaskArray.size()) {
 				currentRawTask = (ObjectNode) fetchedTaskArray.get(currentTaskIndex++);
-				currentTaskStartTime = System.currentTimeMillis();
 				return true;
 			}
 		}
