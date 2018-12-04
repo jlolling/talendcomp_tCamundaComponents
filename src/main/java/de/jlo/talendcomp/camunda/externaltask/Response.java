@@ -108,13 +108,8 @@ public class Response extends CamundaClient {
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/complete", requestPayload, false);
 		int countRetries = client.getCurrentAttempt();
 		long duration = System.currentTimeMillis() - startTime;
-		if (client.getStatusCode() != 204) {
-			String errorMessage = "Complete POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
-			throw new Exception(errorMessage);
-		} else {
-			if (mbeanCamundaExtTaskInfo != null) {
-				mbeanCamundaExtTaskInfo.addComplete(duration, countRetries);
-			}
+		if (mbeanCamundaExtTaskInfo != null) {
+			mbeanCamundaExtTaskInfo.addComplete(duration, countRetries);
 		}
 	}
 	
@@ -130,11 +125,9 @@ public class Response extends CamundaClient {
 		requestPayload.put("errorCode", errorCode);
 		HttpClient client = getHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/bpmnError", requestPayload, false);
-//		if (client.getStatusCode() != 204) {
-//			String message = "BpmnError POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
-//			throw new Exception(message);
-//		}
-		mbeanCamundaExtTaskInfo.addBpmnError();
+		if (mbeanCamundaExtTaskInfo != null) {
+			mbeanCamundaExtTaskInfo.addBpmnError();
+		}
 	}
 	
 	public void updateProcessVariables() throws Exception {
@@ -172,11 +165,9 @@ public class Response extends CamundaClient {
 		}
 		HttpClient client = getHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/failure", requestPayload, false);
-//		if (client.getStatusCode() != 204) {
-//			String message = "Failure POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
-//			throw new Exception(message);
-//		}
-		mbeanCamundaExtTaskInfo.addFailure();
+		if (mbeanCamundaExtTaskInfo != null) {
+			mbeanCamundaExtTaskInfo.addFailure();
+		}
 	}
 	
 	public void unlock() throws Exception {
@@ -184,10 +175,6 @@ public class Response extends CamundaClient {
 		setupTaskId();
 		HttpClient client = getHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/unlock", null, false);
-//		if (client.getStatusCode() != 204) {
-//			String message = "Unlock POST failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage();
-//			throw new Exception(message);
-//		}
 	}
 
 	public String getTaskId() {
