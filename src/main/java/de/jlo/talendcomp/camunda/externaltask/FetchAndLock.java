@@ -116,7 +116,9 @@ public class FetchAndLock extends CamundaClient {
 			}
 			numberFetches++;
 			if (fetchedTaskArray != null && fetchedTaskArray.size() > 0) {
-				mbeanCamundaExtTaskInfo.addTaskFetched(fetchedTaskArray.size());
+				if (mbeanCamundaExtTaskInfo != null) {
+					mbeanCamundaExtTaskInfo.addTaskFetched(fetchedTaskArray.size());
+				}
 				numberSucessfulFetches++;
 				numberTasksReceived = numberTasksReceived + fetchedTaskArray.size();
 				break;
