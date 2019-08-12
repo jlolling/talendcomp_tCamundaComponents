@@ -98,17 +98,6 @@ public class FetchAndLock extends CamundaClient {
 			if (mbeanCamundaExtTaskInfo != null) {
 				mbeanCamundaExtTaskInfo.addFetchAndLock(fetchDuration, countRetries);
 			}
-//			if (client.getStatusCode() != 200) {
-//				String errorMessage = "Worker " + workerId + ": FetchAndLock POST-payload: \n" + requestPayload.toString() + "\n failed: status-code: " + client.getStatusCode() + " message: " + client.getStatusMessage() + "\nResponse: " + responseStr;
-//				if (mbeanCamundaExtTaskInfo != null) {
-//					mbeanCamundaExtTaskInfo.addFetchAndLock(fetchDuration, countRetries);
-//				}
-//				throw new Exception(errorMessage);
-//			} else {
-//				if (mbeanCamundaExtTaskInfo != null) {
-//					mbeanCamundaExtTaskInfo.addFetchAndLock(fetchDuration, countRetries);
-//				}
-//			}
 			try {
 				fetchedTaskArray = (ArrayNode) objectMapper.readTree(responseStr);
 			} catch (Exception e) {
@@ -289,7 +278,7 @@ public class FetchAndLock extends CamundaClient {
 		}
 		String s = taskNode.path("lockExpirationTime").asText();
 		if (s != null && s.trim().isEmpty() == false) {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 			Date time = null;
 			try {
 				time = sdf.parse(s);
@@ -645,6 +634,7 @@ public class FetchAndLock extends CamundaClient {
 	public void registerMBean() throws Exception {
 		mbeanCamundaExtTaskInfo = new CamundaExtTaskInfo();
 		mbeanCamundaExtTaskInfo.setFetchAndLock(this);
+		mbeanCamundaExtTaskInfo.setWorkerStartTime(startTime);
 		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
 		beanName = new ObjectName("de.jlo.talendcomp.camundExtTask:type="+CamundaExtTaskInfo.class.getSimpleName() + ",topic=" + topicName + ",workerId=" + workerId);
 		if (mbs.isRegistered(beanName) == false) {

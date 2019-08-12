@@ -1,5 +1,6 @@
 package de.jlo.talendcomp.camunda.externaltask;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -23,6 +24,7 @@ public class Response extends CamundaClient {
 	private boolean suppressExpiredTasks = false;
 	private boolean currentTaskExpired = false;
 	private CamundaExtTaskInfo mbeanCamundaExtTaskInfo = null;
+	private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 	
 	public Response(FetchAndLock fetchAndLock) throws Exception {
 		if (fetchAndLock == null) {
@@ -71,12 +73,14 @@ public class Response extends CamundaClient {
 	private void checkTaskExpiration() throws Exception {
 		if (checkLockExpiration) {
 			Date taskLockExpirationTime = getTaskExpirationTime();
-			if (taskLockExpirationTime != null && new Date().before(taskLockExpirationTime) == false) {
+			Date now = new Date();
+			if (taskLockExpirationTime != null && now.before(taskLockExpirationTime) == false) {
 				currentTaskExpired = true;
+				String messageTimePart = "Expected response time: " + sdf.format(taskLockExpirationTime) + ", response attempt at: " + sdf.format(now);
 				if (suppressExpiredTasks) {
-					System.err.println("Task id: " + taskId + " has been expired and will be ignored");
+					System.err.println("Task id: " + taskId + " has been expired and will be ignored. " + messageTimePart);
 				} else {
-					throw new Exception("Lock expiration time exceeded for Task id: " + taskId);
+					throw new Exception("Task id: " + taskId + " has been expired, Stop fetching. " + messageTimePart);
 				}
 			}
 		}

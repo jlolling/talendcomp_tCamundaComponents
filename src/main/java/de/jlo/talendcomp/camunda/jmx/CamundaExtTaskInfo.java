@@ -1,5 +1,6 @@
 package de.jlo.talendcomp.camunda.jmx;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -47,6 +48,8 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 	private long totalCompleteDuration = 0l;
 	private long totalCompleteDurationLast = 0l;
 	private long totalCompleteDurationDiff = 0l;
+	private long lastTaskFetchedTime = 0l;
+	private String lastTaskFetchedTimeAsString = null;
 	private int countBpmnErrors = 0;
 	private int countBpmnErrorsLast = 0;
 	private int countBpmnErrorsDiff = 0;
@@ -61,9 +64,11 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 	private int countTotalFinished = 0;
 	private int countTotalFinishedLast = 0;
 	private int countTotalFinishedDiff = 0;
-	private int totalRetries = 0;
+	private long workerStartTime = 0;
+	private String workerStartTimeString = null;
 	private FetchAndLock fetchAndLock = null;
 	private Timer timer = null;
+	private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 	
 	public CamundaExtTaskInfo() {
 		timer = new Timer(true);
@@ -137,10 +142,6 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 		}
 	}
 	
-	public void addRetry() {
-		this.totalRetries++;
-	}
-	
 	public void addComplete(long duration, int countRetries) {
 		this.totalComplets++;
 		if (countRetries > 0) {
@@ -188,6 +189,10 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 		}
 		if (minFetchedTasks == 0 || minFetchedTasks > number) {
 			minFetchedTasks = number;
+		}
+		if (number > 0) {
+			lastTaskFetchedTime = System.currentTimeMillis();
+			lastTaskFetchedTimeAsString = sdf.format(new Date(lastTaskFetchedTime));
 		}
 	}
 	
@@ -496,6 +501,31 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 	@Override
 	public long getMeasurementLastTime() {
 		return lastMeasured;
+	}
+
+	@Override
+	public long getWorkerStartTime() {
+		return workerStartTime;
+	}
+
+	public void setWorkerStartTime(long workerStartTime) {
+		this.workerStartTime = workerStartTime;
+		this.workerStartTimeString = sdf.format(new Date(workerStartTime));
+	}
+
+	@Override
+	public String getWorkerStartTimeAsString() {
+		return workerStartTimeString;
+	}
+
+	@Override
+	public long getLastTaskFetchedTime() {
+		return lastTaskFetchedTime;
+	}
+
+	@Override
+	public String getLastTaskFetchedTimeAsString() {
+		return lastTaskFetchedTimeAsString;
 	}
 
 }

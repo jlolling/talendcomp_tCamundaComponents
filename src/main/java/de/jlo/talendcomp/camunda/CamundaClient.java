@@ -42,7 +42,7 @@ public abstract class CamundaClient {
 				httpClient.setMaxRetriesInCaseOfErrors(maxRetriesInCaseOfErrors);
 				httpClient.setWaitMillisAfterError(waitMillisAfterError);
 				cachedHttpClient = httpClient;
-				return httpClient;
+				return cachedHttpClient;
 			}
 		}
 	}
@@ -189,6 +189,7 @@ public abstract class CamundaClient {
 	public void close() {
 		if (cachedHttpClient != null) {
 			cachedHttpClient.close();
+			cachedHttpClient = null;
 		}
 	}
 	

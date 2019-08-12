@@ -96,4 +96,12 @@ public interface CamundaExtTaskInfoMXBean {
 	
 	public long getMeasurementLastTime();
 
+	public long getWorkerStartTime();
+
+	public String getWorkerStartTimeAsString();
+	
+	public long getLastTaskFetchedTime();
+
+	public String getLastTaskFetchedTimeAsString();
+
 }

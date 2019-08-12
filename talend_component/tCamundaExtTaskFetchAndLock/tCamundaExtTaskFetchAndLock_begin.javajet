@@ -57,6 +57,7 @@
  	 List<Map<String, String>> configList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__COLUMN_CONFIG__");
  	 List<Map<String, String>> varList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__VARIABLES_CONFIG__");
     boolean deserializeJson = "true".equals(ElementParameterParser.getValue(node, "__DESERIALIZE_JSON_VALUES__"));
+    boolean multiplyLockDuractionWithFetchsize = "true".equals(ElementParameterParser.getValue(node, "__LOCK_DURATION_MULTIPLY_WITH_FETCHSIZE__"));
 	 IConnection conn = null;
 	 List<? extends IConnection> outConns = NodeUtil.getOutgoingConnections(node, IConnectionCategory.DATA);
 	 if (outConns.size() > 0) {
@@ -88,7 +89,11 @@
 	<%=cid%>.setUsePriority(<%=usePriority%>);
 	<%=cid%>.setWorkerId(<%=workerId%>);
 	<%=cid%>.setNumberTaskToFetch(<%=maxTasks%>);
+<% if (multiplyLockDuractionWithFetchsize) { %>
+	<%=cid%>.setLockDuration((<%=lockDuration%>) * (<%=maxTasks%>));
+<% } else { %>
 	<%=cid%>.setLockDuration(<%=lockDuration%>);
+<% } %>
 	<%=cid%>.setDeserializeFetchedJsonValues(<%=deserializeJson%>);
 <%	if (stopTime != null && stopTime.trim().isEmpty() == false) { %>
 	<%=cid%>.setStopTime(<%=stopTime%>);
