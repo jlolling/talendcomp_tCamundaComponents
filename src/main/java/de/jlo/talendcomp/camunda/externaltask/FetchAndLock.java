@@ -68,6 +68,7 @@ public class FetchAndLock extends CamundaClient {
 		requestPayload.put("workerId", workerId);
 		requestPayload.put("maxTasks", numberTaskToFetch);
 		requestPayload.put("usePriority", usePriority);
+		requestPayload.put("asyncResponseTimeout", getTimeout());
 		requestPayload
 			.withArray("topics")
 				.addObject()

@@ -38,7 +38,7 @@ public abstract class CamundaClient {
 			if (cachedHttpClient != null) {
 				return cachedHttpClient;
 			} else {
-				HttpClient httpClient = new HttpClient(camundaServiceEndpointURL, camundaUser, camundaPassword, timeout);
+				HttpClient httpClient = new HttpClient(camundaServiceEndpointURL, camundaUser, camundaPassword, timeout + 100);
 				httpClient.setMaxRetriesInCaseOfErrors(maxRetriesInCaseOfErrors);
 				httpClient.setWaitMillisAfterError(waitMillisAfterError);
 				cachedHttpClient = httpClient;

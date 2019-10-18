@@ -22,6 +22,10 @@
 	 if (errorCode == null || errorCode.trim().isEmpty()) {
 	 	  errorCode = "null";
 	 }
+	 String errorMessage = ElementParameterParser.getValue(node, "__ERROR_MESSAGE__");
+	 if (errorMessage == null || errorCode.trim().isEmpty()) {
+	 	  errorMessage = "null";
+	 }
 	 boolean valuesFromFlow = "true".equals(ElementParameterParser.getValue(node, "__TAKE_VALUE_FROM_FLOW__"));
     String fetchAndLock = ElementParameterParser.getValue(node, "__FETCH_AND_LOCK_COMPONENT__");
 %>
@@ -38,9 +42,9 @@
 		<%=cid%>.setTaskIdFromInput(<%=taskIdFromInput%>);
 <%	} %>
 <%	if (conn != null && valuesFromFlow) { %>
-		<%=cid%>.bpmnError(<%=conn.getName()%>.errorCode);
+		<%=cid%>.bpmnError(<%=conn.getName()%>.errorCode, <%=conn.getName()%>.errorMessage);
 <% } else { %>
-		<%=cid%>.bpmnError(<%=errorCode%>);
+		<%=cid%>.bpmnError(<%=errorCode%>, <%=errorMessage%>);
 <%	} %>
 
 		Integer count_<%=cid%> = (Integer) globalMap.get("<%=cid%>_NB_LINE");

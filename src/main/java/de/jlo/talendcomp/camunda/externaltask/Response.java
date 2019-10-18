@@ -117,7 +117,10 @@ public class Response extends CamundaClient {
 		}
 	}
 	
-	public void bpmnError(String errorCode) throws Exception {
+	public void bpmnError(String errorCode, String errorMessage) throws Exception {
+		if (Util.isEmpty(errorCode)) {
+			throw new IllegalArgumentException("sending bpmnError failed: errorCode cannot be null or empty!");
+		}
 		notifiyFinishedTask();
 		String workerId = fetchAndLock.getWorkerId();
 		if (workerId == null) {
@@ -127,6 +130,7 @@ public class Response extends CamundaClient {
 		ObjectNode requestPayload = objectMapper.createObjectNode();
 		requestPayload.put("workerId", workerId);
 		requestPayload.put("errorCode", errorCode);
+		requestPayload.put("errorMessage", errorMessage);
 		HttpClient client = getHttpClient();
 		client.post(getExternalTaskEndpointURL() + "/" + taskId + "/bpmnError", requestPayload, false);
 		if (mbeanCamundaExtTaskInfo != null) {
