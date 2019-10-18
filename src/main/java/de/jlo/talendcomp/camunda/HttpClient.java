@@ -37,8 +37,8 @@ public class HttpClient {
 	private CloseableHttpClient closableHttpClient = null;
 	private HttpClientContext context = null;
 	
-	public HttpClient(String urlStr, String user, String password, int timeout) throws Exception {
-		closableHttpClient = createCloseableClient(urlStr, user, password, timeout);
+	public HttpClient(String urlStr, String user, String password, int timeout, int socketTimeout) throws Exception {
+		closableHttpClient = createCloseableClient(urlStr, user, password, timeout, socketTimeout);
 	}
 	
 	private HttpEntity buildEntity(JsonNode node) throws UnsupportedEncodingException {
@@ -120,7 +120,7 @@ public class HttpClient {
         return execute(request, expectResponse);
 	}
 
-	private CloseableHttpClient createCloseableClient(String urlStr, String user, String password, int timeout) throws Exception {
+	private CloseableHttpClient createCloseableClient(String urlStr, String user, String password, int timeout, int socketTimeout) throws Exception {
         CredentialsProvider credsProvider = new BasicCredentialsProvider();
         if (closableHttpClient == null) {
             if (user != null && user.trim().isEmpty() == false) {
@@ -129,7 +129,7 @@ public class HttpClient {
                         AuthScope.ANY,
                         new UsernamePasswordCredentials(user, password));
                 RequestConfig requestConfig = RequestConfig.custom()
-                        .setSocketTimeout(timeout)
+                        .setSocketTimeout(socketTimeout + 100)
                         .setConnectTimeout(timeout)
                         .setConnectionRequestTimeout(timeout)
                         .setRedirectsEnabled(true)

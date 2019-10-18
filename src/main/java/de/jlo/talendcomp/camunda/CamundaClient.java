@@ -22,6 +22,7 @@ public abstract class CamundaClient {
 	private int maxRetriesInCaseOfErrors = 1;
 	private long waitMillisAfterError = 1000l;
 	private int timeout = 10000;
+	private int socketTimeout = 10000;
 	protected final static ObjectMapper objectMapper = new ObjectMapper();
 	private Locale defaultLocale = Locale.ENGLISH;
 	private String camundaEngine = "default";
@@ -38,7 +39,7 @@ public abstract class CamundaClient {
 			if (cachedHttpClient != null) {
 				return cachedHttpClient;
 			} else {
-				HttpClient httpClient = new HttpClient(camundaServiceEndpointURL, camundaUser, camundaPassword, timeout + 100);
+				HttpClient httpClient = new HttpClient(camundaServiceEndpointURL, camundaUser, camundaPassword, timeout, socketTimeout);
 				httpClient.setMaxRetriesInCaseOfErrors(maxRetriesInCaseOfErrors);
 				httpClient.setWaitMillisAfterError(waitMillisAfterError);
 				cachedHttpClient = httpClient;
@@ -308,6 +309,14 @@ public abstract class CamundaClient {
 		} else {
 			return null;
 		}
+	}
+
+	public int getSocketTimeout() {
+		return socketTimeout;
+	}
+
+	public void setSocketTimeout(int socketTimeout) {
+		this.socketTimeout = socketTimeout;
 	}
 
 }

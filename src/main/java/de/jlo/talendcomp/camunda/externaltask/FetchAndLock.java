@@ -44,6 +44,7 @@ public class FetchAndLock extends CamundaClient {
 	private boolean deserializeFetchedJsonValues = false;
 	private boolean reuseHttpClientForAllRequests = false;
 	private long taskProcessingStartTime = 0l;
+	private boolean useLongPolling = true;
 	
 	public FetchAndLock() {
 		startTime = System.currentTimeMillis();
@@ -68,7 +69,9 @@ public class FetchAndLock extends CamundaClient {
 		requestPayload.put("workerId", workerId);
 		requestPayload.put("maxTasks", numberTaskToFetch);
 		requestPayload.put("usePriority", usePriority);
-		requestPayload.put("asyncResponseTimeout", getTimeout());
+		if (useLongPolling) {
+			requestPayload.put("asyncResponseTimeout", getSocketTimeout());
+		}
 		requestPayload
 			.withArray("topics")
 				.addObject()
@@ -671,5 +674,18 @@ public class FetchAndLock extends CamundaClient {
 	public long getTaskProcessingStartTime() {
 		return taskProcessingStartTime;
 	}
-	
+
+	public boolean isUseLongPolling() {
+		return useLongPolling;
+	}
+
+	public void setupLongPolling(Boolean useLongPolling, Integer longPollingTimeout) {
+		if (useLongPolling != null) {
+			this.useLongPolling = useLongPolling;
+		}
+		if (longPollingTimeout != null) {
+			setSocketTimeout(longPollingTimeout.intValue());
+		}
+	}
+
 }
