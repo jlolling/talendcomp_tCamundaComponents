@@ -687,5 +687,13 @@ public class FetchAndLock extends CamundaClient {
 			setSocketTimeout(longPollingTimeout.intValue());
 		}
 	}
+	
+	public long getAsyncResponseTimeout() {
+		if (isUseLongPolling()) {
+			return getSocketTimeout();
+		} else {
+			return 0;
+		}
+	}
 
 }

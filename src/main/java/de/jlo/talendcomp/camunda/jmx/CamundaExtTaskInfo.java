@@ -528,4 +528,14 @@ public class CamundaExtTaskInfo implements CamundaExtTaskInfoMXBean {
 		return lastTaskFetchedTimeAsString;
 	}
 
+	@Override
+	public boolean getUseLongPolling() {
+		return fetchAndLock.isUseLongPolling();
+	}
+
+	@Override
+	public long getAsyncResponseTimeout() {
+		return fetchAndLock.getAsyncResponseTimeout();
+	}
+
 }

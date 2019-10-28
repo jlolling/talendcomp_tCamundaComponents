@@ -104,4 +104,7 @@ public interface CamundaExtTaskInfoMXBean {
 
 	public String getLastTaskFetchedTimeAsString();
 
+	public boolean getUseLongPolling();
+
+	public long getAsyncResponseTimeout();
 }

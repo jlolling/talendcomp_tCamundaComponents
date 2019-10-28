@@ -150,7 +150,7 @@ public class HttpClient {
                 return client;
             } else {
                 RequestConfig requestConfig = RequestConfig.custom()
-                        .setSocketTimeout(timeout)
+                        .setSocketTimeout(socketTimeout + 100)
                         .setConnectTimeout(timeout)
                         .setConnectionRequestTimeout(timeout)
                         .setRedirectsEnabled(true)
