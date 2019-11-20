@@ -59,6 +59,7 @@
     if (longPollingTimeout == null || longPollingTimeout.trim().isEmpty()) {
     	longPollingTimeout = "null";
     }
+    String stopExpression = ElementParameterParser.getValue(node, "__STOP_EXPRESSION__");
  	 List<Map<String, String>> configList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__COLUMN_CONFIG__");
  	 List<Map<String, String>> varList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__VARIABLES_CONFIG__");
     boolean deserializeJson = "true".equals(ElementParameterParser.getValue(node, "__DESERIALIZE_JSON_VALUES__"));
@@ -111,6 +112,14 @@
 	<%=cid%>.setWaitMillisAfterError(<%=waitTimeAfterError%>);
 <%	} %>
 <%	if (timeout != null && timeout.trim().isEmpty() == false) { %>
+<% if (stopExpression != null && stopExpression.trim().isEmpty() == false) { %>
+	<%=cid%>.setStopFetchingCheck(new de.jlo.talendcomp.camunda.externaltask.StopFetchingCheck() {
+			@Override
+			public boolean shouldStopFetching() {
+				return (<%=stopExpression%>);
+			}
+	});
+<%	} %>
 	<%=cid%>.setTimeout(<%=timeout%>);
 <%	} %>
 	<%=cid%>.setupLongPolling(<%=useLongPolling%>, <%=longPollingTimeout%>);
@@ -144,6 +153,11 @@
 <%	} %>
 <%	if (returnAllTasksCurrentlyFetched) { %>
 	while (true) {
+<% if (stopExpression != null && stopExpression.trim().isEmpty() == false) { %>
+		if (<%=stopExpression%>) {
+			break;
+		}
+<%	} %>
 		try {
 			// next calls repeatly fetchAnLock and iterates through the fetched tasks
 			com.fasterxml.jackson.databind.node.ArrayNode taskArray_<%=cid%> = null;

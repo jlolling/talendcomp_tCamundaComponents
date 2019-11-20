@@ -45,6 +45,7 @@ public class FetchAndLock extends CamundaClient {
 	private boolean reuseHttpClientForAllRequests = false;
 	private long taskProcessingStartTime = 0l;
 	private boolean useLongPolling = true;
+	private StopFetchingCheck stopCheck = null;
 	
 	public FetchAndLock() {
 		startTime = System.currentTimeMillis();
@@ -59,6 +60,10 @@ public class FetchAndLock extends CamundaClient {
 			an.add(var);
 		}
 		return an;
+	}
+	
+	public void setStopFetchingCheck(StopFetchingCheck stopCheck) {
+		this.stopCheck = stopCheck;
 	}
 	
 	public int fetchAndLock() throws Exception {
@@ -83,7 +88,10 @@ public class FetchAndLock extends CamundaClient {
 		currentTaskStartTime = 0;
 		currentRawTask = null;
 		while (true) {
-			if (stopTimeReached()) {
+			if (Thread.currentThread().isInterrupted()) {
+				break;
+			}
+			if (stopFetching()) {
 				break;
 			}
 			if (firstFetch == false) {
@@ -130,12 +138,18 @@ public class FetchAndLock extends CamundaClient {
 		}
 	}
 	
-	private boolean stopTimeReached() {
+	private boolean stopFetching() {
 		if (startTime > 0l && stopTime > 0l) {
 			// check the runtime but take care we are trying fetch at at least one time
 			long currentTime = System.currentTimeMillis();
 			if (currentTime >= stopTime) {
 				System.out.println("Worker: " + workerId + ": Stop fetching tasks because max runtime is reached.");
+				return true;
+			}
+		}
+		if (stopCheck != null) {
+			if (stopCheck.shouldStopFetching()) {
+				System.out.println("Worker: " + workerId + ": Stop fetching check expects stop fetching.");
 				return true;
 			}
 		}
