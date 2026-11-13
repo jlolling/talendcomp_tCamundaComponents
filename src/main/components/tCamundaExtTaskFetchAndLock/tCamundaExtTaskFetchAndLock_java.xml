@@ -8,7 +8,7 @@
     <FAMILY>Camunda</FAMILY> 
   </FAMILIES>  
   <DOCUMENTATION> 
-    <URL/> 
+    <URL>https://github.com/jlolling/talendcomp_tCamundaComponents</URL> 
   </DOCUMENTATION>  
   <CONNECTORS> 
     <CONNECTOR CTYPE="FLOW" MAX_INPUT="0" MIN_OUTPUT="1" MAX_OUTPUT="1"/>  
